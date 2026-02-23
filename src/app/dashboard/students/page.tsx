@@ -24,6 +24,10 @@ interface PageProps {
 export default async function StudentsPage({ searchParams }: PageProps) {
   const params = await searchParams; // Next.js 15+ — searchParams is a Promise
   const session = await auth();
+  const institutionId = (session?.user as { institutionId?: string } | undefined)?.institutionId;
+  if (!institutionId) {
+    return null;
+  }
 
   const page = Number(params.page) || 1;
   const search = params.search || "";
@@ -33,7 +37,7 @@ export default async function StudentsPage({ searchParams }: PageProps) {
   const [data, classes] = await Promise.all([
     getStudents({ page, search, classId, status }),
     db.class.findMany({
-      where: { institutionId: session!.user.institutionId, isActive: true },
+      where: { institutionId, isActive: true },
       select: { id: true, name: true, grade: true, section: true },
       orderBy: [{ grade: "asc" }, { section: "asc" }],
     }),

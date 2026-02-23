@@ -2,12 +2,12 @@
 // Prisma v7 — Multi-Tenant School Management System
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ─────────────────────────────────────────────

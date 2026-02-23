@@ -42,7 +42,7 @@ interface NavItem {
   roles?: string[];
 }
 
-const NAV_SECTIONS = [
+const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
   {
     label: "Overview",
     items: [
@@ -89,7 +89,7 @@ const NAV_SECTIONS = [
 export function Sidebar({ session }: SidebarProps) {
   const pathname = usePathname();
   const userRole = (session.user as any)?.role ?? "";
-  const userInitials = session.user.name
+  const userInitials = (session.user.name ?? "User")
     ?.split(" ")
     .map((n) => n[0])
     .join("")
@@ -192,7 +192,7 @@ export function Sidebar({ session }: SidebarProps) {
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold truncate">
-                {session.user.name}
+                {session.user.name ?? "User"}
               </p>
               <p className="text-[10px] text-muted-foreground truncate">
                 {userRole.charAt(0) + userRole.slice(1).toLowerCase()}

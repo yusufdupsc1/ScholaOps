@@ -1,24 +1,9 @@
 // src/app/layout.tsx
 import type { Metadata, Viewport } from "next";
-import { Syne, DM_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "sonner";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "@/styles/globals.css";
-
-const syne = Syne({
-  subsets: ["latin"],
-  variable: "--font-syne",
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const dmMono = DM_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  display: "swap",
-  weight: ["400", "500"],
-});
 
 export const metadata: Metadata = {
   title: {
@@ -71,9 +56,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${syne.variable} ${dmMono.variable} font-sans antialiased`}
-      >
+      <body className="font-sans antialiased">
         <NuqsAdapter>
           <SessionProvider>
             {children}

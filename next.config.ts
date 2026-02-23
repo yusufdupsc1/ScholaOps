@@ -74,13 +74,6 @@ const nextConfig: NextConfig = {
     ppr: "incremental",
     // React Compiler (experimental)
     reactCompiler: false,
-    // Optimized package imports
-    optimizePackageImports: [
-      "lucide-react",
-      "recharts",
-      "@radix-ui/react-icons",
-      "motion",
-    ],
   },
 };
 

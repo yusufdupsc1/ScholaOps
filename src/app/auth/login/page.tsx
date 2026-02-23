@@ -52,7 +52,7 @@ export default async function LoginPage({
 
           <blockquote className="space-y-3">
             <p className="text-3xl font-semibold leading-snug tracking-tight text-balance">
-              "The modern operating system for institutions that care about outcomes."
+              &ldquo;The modern operating system for institutions that care about outcomes.&rdquo;
             </p>
             <footer className="text-sm text-muted-foreground">
               Built for principals, teachers, and administrators

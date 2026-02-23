@@ -3,7 +3,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -36,11 +35,17 @@ type ActionResult<T = void> =
 // ─── Helper: get session + institution ─────
 async function getAuthContext() {
   const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = session?.user as
+    | { id?: string; institutionId?: string; role?: string }
+    | undefined;
+
+  if (!user?.id || !user.institutionId || !user.role) {
+    throw new Error("Unauthorized");
+  }
   return {
-    userId: session.user.id,
-    institutionId: session.user.institutionId,
-    role: session.user.role,
+    userId: user.id,
+    institutionId: user.institutionId,
+    role: user.role,
   };
 }
 
@@ -244,8 +249,12 @@ export async function getStudents({
   status?: string;
 }) {
   const { institutionId } = await getAuthContext();
-
-  const where = {
+  const where: {
+    institutionId: string;
+    status?: any;
+    classId?: string;
+    OR?: Array<Record<string, unknown>>;
+  } = {
     institutionId,
     ...(status !== "ALL" && { status: status as any }),
     ...(classId && { classId }),

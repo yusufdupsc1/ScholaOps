@@ -56,8 +56,18 @@ async function getRevenueData(institutionId: string) {
 
 export default async function DashboardPage() {
   const session = await auth();
-  const institutionId = session!.user.institutionId;
-  const userName = session!.user.name?.split(" ")[0] ?? "there";
+  const user = session?.user as {
+    institutionId?: string;
+    institutionName?: string;
+    name?: string | null;
+  } | undefined;
+  if (!user?.institutionId) {
+    return null;
+  }
+
+  const institutionId = user.institutionId;
+  const institutionName = user.institutionName ?? "your institution";
+  const userName = user.name?.split(" ")[0] ?? "there";
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -79,8 +89,8 @@ export default async function DashboardPage() {
           <span className="text-primary">{userName}</span>
         </h1>
         <p className="text-muted-foreground">
-          Here's what's happening at{" "}
-          <strong>{session!.user.institutionName}</strong> today.
+          Here&apos;s what&apos;s happening at{" "}
+          <strong>{institutionName}</strong> today.
         </p>
       </div>
 
@@ -124,6 +134,7 @@ export default async function DashboardPage() {
 // ── Async sub-components (parallel data fetching via Suspense) ──
 
 async function StatsSection({ institutionId }: { institutionId: string }) {
+  void institutionId;
   const stats = await getDashboardStats();
   return <StatsGrid stats={stats} />;
 }
@@ -139,6 +150,7 @@ async function RevenueChartSection({ institutionId }: { institutionId: string })
 }
 
 async function RecentStudentsSection({ institutionId }: { institutionId: string }) {
+  void institutionId;
   const stats = await getDashboardStats();
   return <RecentStudents students={stats.recentStudents} />;
 }
