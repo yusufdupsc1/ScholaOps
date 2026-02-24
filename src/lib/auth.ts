@@ -15,13 +15,18 @@ const providers: any[] = [
       const email = credentials?.email;
       const password = credentials?.password;
 
-      if (!email || !password || typeof email !== "string" || typeof password !== "string") {
+      if (
+        !email ||
+        !password ||
+        typeof email !== "string" ||
+        typeof password !== "string"
+      ) {
         return null;
       }
 
       const user = await db.user.findUnique({
         where: { email },
-        include: { institution: { select: { name: true } } },
+        include: { institution: { select: { name: true, slug: true } } },
       });
 
       if (!user?.password || !user.isActive) {
@@ -41,6 +46,7 @@ const providers: any[] = [
         role: user.role,
         institutionId: user.institutionId,
         institutionName: user.institution.name,
+        institutionSlug: user.institution.slug,
       };
     },
   }),
@@ -51,7 +57,7 @@ if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
-    })
+    }),
   );
 }
 
@@ -66,23 +72,26 @@ const authConfig: any = {
           role?: string;
           institutionId?: string;
           institutionName?: string;
+          institutionSlug?: string;
         };
 
         (token as any).role = typedUser.role;
         (token as any).institutionId = typedUser.institutionId;
         (token as any).institutionName = typedUser.institutionName;
+        (token as any).institutionSlug = typedUser.institutionSlug;
       }
 
       if (!(token as any).institutionId && token.email) {
         const dbUser = await db.user.findUnique({
           where: { email: token.email },
-          include: { institution: { select: { name: true } } },
+          include: { institution: { select: { name: true, slug: true } } },
         });
 
         if (dbUser) {
           (token as any).role = dbUser.role;
           (token as any).institutionId = dbUser.institutionId;
           (token as any).institutionName = dbUser.institution.name;
+          (token as any).institutionSlug = dbUser.institution.slug;
         }
       }
 
@@ -91,10 +100,17 @@ const authConfig: any = {
     async session({ session, token }) {
       if (session.user) {
         (session.user as { id?: string }).id = token.sub;
-        (session.user as { role?: string }).role = (token as any).role as string;
-        (session.user as { institutionId?: string }).institutionId = (token as any).institutionId as string;
-        (session.user as { institutionName?: string }).institutionName =
-          (token as any).institutionName as string;
+        (session.user as { role?: string }).role = (token as any)
+          .role as string;
+        (session.user as { institutionId?: string }).institutionId = (
+          token as any
+        ).institutionId as string;
+        (session.user as { institutionName?: string }).institutionName = (
+          token as any
+        ).institutionName as string;
+        (session.user as { institutionSlug?: string }).institutionSlug = (
+          token as any
+        ).institutionSlug as string;
       }
       return session;
     },

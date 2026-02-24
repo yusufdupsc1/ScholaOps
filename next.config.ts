@@ -10,9 +10,8 @@ const nextConfig: NextConfig = {
   // Turbopack (stable in Next.js 15+, full builds in 16)
   // Enabled via `next dev --turbopack` and `next build --turbopack`
 
-  // TypeScript + ESLint — errors block production builds
+  // TypeScript — errors block production builds
   typescript: { ignoreBuildErrors: false },
-  eslint: { ignoreDuringBuilds: false },
 
   // Security headers
   async headers() {
@@ -66,14 +65,6 @@ const nextConfig: NextConfig = {
     fetches: {
       fullUrl: process.env.NODE_ENV === "development",
     },
-  },
-
-  // Experimental
-  experimental: {
-    // PPR — Partial Pre-rendering (Next.js 16)
-    ppr: "incremental",
-    // React Compiler (experimental)
-    reactCompiler: false,
   },
 };
 

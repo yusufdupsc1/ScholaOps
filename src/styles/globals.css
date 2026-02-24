@@ -108,7 +108,7 @@
   * {
     @apply border-border;
   }
-  
+
   html {
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     scroll-behavior: smooth;
@@ -124,7 +124,12 @@
   }
 
   /* Better heading rhythm */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold tracking-tight;
   }
 
@@ -205,49 +210,92 @@
 
 /* ─── Keyframes ─── */
 @keyframes shimmer {
-  from { background-position: 200% center; }
-  to { background-position: -200% center; }
+  from {
+    background-position: 200% center;
+  }
+  to {
+    background-position: -200% center;
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(16px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ─── Page Transitions ─── */
 @layer utilities {
   .animate-fade-in {
     animation: fade-in 0.3s ease-out forwards;
+    animation-delay: 0ms;
   }
   .animate-slide-right {
     animation: slide-in-right 0.25s ease-out forwards;
+    animation-delay: 0ms;
   }
   .animate-scale-in {
     animation: scale-in 0.2s ease-out forwards;
   }
-  
+
   /* Staggered children */
-  .stagger > * { opacity: 0; animation: fade-in 0.4s ease-out forwards; }
-  .stagger > *:nth-child(1) { animation-delay: 0ms; }
-  .stagger > *:nth-child(2) { animation-delay: 60ms; }
-  .stagger > *:nth-child(3) { animation-delay: 120ms; }
-  .stagger > *:nth-child(4) { animation-delay: 180ms; }
-  .stagger > *:nth-child(5) { animation-delay: 240ms; }
-  .stagger > *:nth-child(6) { animation-delay: 300ms; }
+  .stagger > * {
+    opacity: 0;
+    animation: fade-in 0.4s ease-out forwards;
+  }
+  .stagger > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .stagger > *:nth-child(2) {
+    animation-delay: 60ms;
+  }
+  .stagger > *:nth-child(3) {
+    animation-delay: 120ms;
+  }
+  .stagger > *:nth-child(4) {
+    animation-delay: 180ms;
+  }
+  .stagger > *:nth-child(5) {
+    animation-delay: 240ms;
+  }
+  .stagger > *:nth-child(6) {
+    animation-delay: 300ms;
+  }
 }
 
 /* ─── Print ─── */
 @media print {
-  .no-print { display: none !important; }
-  body { @apply text-black bg-white; }
+  .no-print {
+    display: none !important;
+  }
+  body {
+    @apply text-black bg-white;
+  }
 }

@@ -29,8 +29,13 @@ const StudentSchema = z.object({
 export type StudentFormData = z.infer<typeof StudentSchema>;
 
 type ActionResult<T = void> =
-  | { success: true; data?: T }
-  | { success: false; error: string; fieldErrors?: Record<string, string[]> };
+  | { success: true; data?: T; error?: never }
+  | {
+      success: false;
+      error: string;
+      fieldErrors?: Record<string, string[]>;
+      data?: never;
+    };
 
 // ─── Helper: get session + institution ─────
 async function getAuthContext() {
@@ -58,7 +63,7 @@ async function generateStudentId(institutionId: string): Promise<string> {
 
 // ─── CREATE ─────────────────────────────────
 export async function createStudent(
-  formData: StudentFormData
+  formData: StudentFormData,
 ): Promise<ActionResult<{ id: string; studentId: string }>> {
   try {
     const { institutionId, userId } = await getAuthContext();
@@ -68,7 +73,10 @@ export async function createStudent(
       return {
         success: false,
         error: "Validation failed",
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+        fieldErrors: parsed.error.flatten().fieldErrors as Record<
+          string,
+          string[]
+        >,
       };
     }
 
@@ -113,7 +121,11 @@ export async function createStudent(
           action: "CREATE",
           entity: "Student",
           entityId: s.id,
-          newValues: { studentId, firstName: data.firstName, lastName: data.lastName },
+          newValues: {
+            studentId,
+            firstName: data.firstName,
+            lastName: data.lastName,
+          },
           userId,
         },
       });
@@ -122,17 +134,23 @@ export async function createStudent(
     });
 
     revalidatePath("/dashboard/students");
-    return { success: true, data: { id: student.id, studentId: student.studentId } };
+    return {
+      success: true,
+      data: { id: student.id, studentId: student.studentId },
+    };
   } catch (error) {
     console.error("[CREATE_STUDENT]", error);
-    return { success: false, error: "Failed to create student. Please try again." };
+    return {
+      success: false,
+      error: "Failed to create student. Please try again.",
+    };
   }
 }
 
 // ─── UPDATE ─────────────────────────────────
 export async function updateStudent(
   id: string,
-  formData: StudentFormData
+  formData: StudentFormData,
 ): Promise<ActionResult> {
   try {
     const { institutionId, userId } = await getAuthContext();
@@ -142,7 +160,10 @@ export async function updateStudent(
       return {
         success: false,
         error: "Validation failed",
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+        fieldErrors: parsed.error.flatten().fieldErrors as Record<
+          string,
+          string[]
+        >,
       };
     }
 
@@ -177,7 +198,10 @@ export async function updateStudent(
           action: "UPDATE",
           entity: "Student",
           entityId: id,
-          oldValues: { firstName: existing.firstName, lastName: existing.lastName },
+          oldValues: {
+            firstName: existing.firstName,
+            lastName: existing.lastName,
+          },
           newValues: { firstName: data.firstName, lastName: data.lastName },
           userId,
         },
@@ -306,9 +330,14 @@ export async function getDashboardStats() {
   ] = await Promise.all([
     db.student.count({ where: { institutionId, status: "ACTIVE" } }),
     db.teacher.count({ where: { institutionId, status: "ACTIVE" } }),
-    db.attendance.count({ where: { institutionId, date: today, status: "PRESENT" } }),
+    db.attendance.count({
+      where: { institutionId, date: today, status: "PRESENT" },
+    }),
     db.fee.aggregate({
-      where: { institutionId, status: { in: ["UNPAID", "PARTIAL", "OVERDUE"] } },
+      where: {
+        institutionId,
+        status: { in: ["UNPAID", "PARTIAL", "OVERDUE"] },
+      },
       _sum: { amount: true },
       _count: true,
     }),

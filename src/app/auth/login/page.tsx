@@ -104,7 +104,17 @@ export default async function LoginPage({
             error={params.error}
           />
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            New school?{" "}
+            <a
+              href="/auth/register"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Create your institution
+            </a>
+          </p>
+
+          <p className="mt-3 text-center text-xs text-muted-foreground">
             By signing in, you agree to our{" "}
             <a href="/terms" className="underline underline-offset-4 hover:text-foreground">
               Terms

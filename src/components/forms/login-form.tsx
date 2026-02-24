@@ -41,7 +41,7 @@ export function LoginForm({ callbackUrl, error }: LoginFormProps) {
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(
-    error ? (AUTH_ERRORS[error] ?? AUTH_ERRORS.default) : null
+    error ? (AUTH_ERRORS[error] ?? AUTH_ERRORS.default) : null,
   );
 
   const {
@@ -87,7 +87,7 @@ export function LoginForm({ callbackUrl, error }: LoginFormProps) {
   return (
     <div className="space-y-5">
       {formError && (
-        <Alert variant="destructive" className="animate-fade-in">
+        <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{formError}</AlertDescription>
         </Alert>
@@ -145,7 +145,9 @@ export function LoginForm({ callbackUrl, error }: LoginFormProps) {
             </button>
           </div>
           {errors.password && (
-            <p className="text-xs text-destructive">{errors.password.message}</p>
+            <p className="text-xs text-destructive">
+              {errors.password.message}
+            </p>
           )}
         </div>
 

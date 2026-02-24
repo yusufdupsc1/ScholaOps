@@ -2,3 +2,8 @@ node_modules
 .next
 tsconfig.tsbuildinfo
 npm-debug.log*
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.log
