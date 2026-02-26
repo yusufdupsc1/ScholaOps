@@ -14,7 +14,7 @@ async function main() {
     create: {
       name: "ScholaOPS Academy",
       slug: "scholaops-demo",
-      email: "admin@schooledu.com",
+      email: "admin@school.edu",
       phone: "+1-555-0100",
       address: "123 Innovation Way",
       city: "Palo Alto",
@@ -41,11 +41,11 @@ async function main() {
   // ── Admin User ───────────────────────────────
   const hashedPassword = await bcryptjs.hash("admin123", 12);
   const adminUser = await db.user.upsert({
-    where: { email: "admin@schooledu.com" },
+    where: { email: "admin@school.edu" },
     update: {},
     create: {
       name: "Alex Admin",
-      email: "admin@schooledu.com",
+      email: "admin@school.edu",
       password: hashedPassword,
       role: Role.ADMIN,
       emailVerified: new Date(),
@@ -57,11 +57,11 @@ async function main() {
   // ── Principal ────────────────────────────────
   const principalPwd = await bcryptjs.hash("principal123", 12);
   await db.user.upsert({
-    where: { email: "principal@schooledu.com" },
+    where: { email: "principal@school.edu" },
     update: {},
     create: {
       name: "Dr. Sarah Chen",
-      email: "principal@schooledu.com",
+      email: "principal@school.edu",
       password: principalPwd,
       role: Role.PRINCIPAL,
       emailVerified: new Date(),
@@ -126,10 +126,10 @@ async function main() {
 
   // ── Teachers ─────────────────────────────────
   const teacherData = [
-    { firstName: "James", lastName: "Wilson", email: "j.wilson@schooledu.com", specialization: "Mathematics" },
-    { firstName: "Maria", lastName: "Rodriguez", email: "m.rodriguez@schooledu.com", specialization: "Science" },
-    { firstName: "David", lastName: "Kim", email: "d.kim@schooledu.com", specialization: "Computer Science" },
-    { firstName: "Emily", lastName: "Thompson", email: "e.thompson@schooledu.com", specialization: "English" },
+    { firstName: "James", lastName: "Wilson", email: "j.wilson@school.edu", specialization: "Mathematics" },
+    { firstName: "Maria", lastName: "Rodriguez", email: "m.rodriguez@school.edu", specialization: "Science" },
+    { firstName: "David", lastName: "Kim", email: "d.kim@school.edu", specialization: "Computer Science" },
+    { firstName: "Emily", lastName: "Thompson", email: "e.thompson@school.edu", specialization: "English" },
   ];
 
   const teachers = await Promise.all(
@@ -175,7 +175,7 @@ async function main() {
           studentId: sid,
           firstName,
           lastName,
-          email: `${firstName.toUpperCase()}.${lastName.toUpperCase()}@student.schooledu.com`,
+          email: `${firstName.toUpperCase()}.${lastName.toUpperCase()}@student.school.edu`,
           gender: s % 2 === 0 ? Gender.MALE : Gender.FEMALE,
           dateOfBirth: new Date(2006 + (c % 4), s % 12, (s % 28) + 1),
           status: StudentStatus.ACTIVE,
@@ -283,8 +283,8 @@ async function main() {
 
   console.log("\n🎉 Seeding complete!\n");
   console.log("Demo credentials:");
-  console.log("  Admin:     admin@schooledu.com / admin123");
-  console.log("  Principal: principal@schooledu.com / principal123");
+  console.log("  Admin:     admin@school.edu / admin123");
+  console.log("  Principal: principal@school.edu / principal123");
 }
 
 main()
