@@ -21,7 +21,7 @@ const ADMIN_ROUTES = [
   "/dashboard/users",
 ];
 
-const AUTH_SECRET = process.env.AUTH_SECRET;
+const AUTH_SECRET = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -44,12 +44,17 @@ export default async function middleware(req: NextRequest) {
 
   // 3. Get session token (Edge-compatible)
   // getToken automatically handles cookie decryption using AUTH_SECRET
+  const isSecureCookie = req.nextUrl.protocol === "https:" ||
+    req.headers.get("x-forwarded-proto") === "https";
+
   const token = await getToken({
     req,
     secret: AUTH_SECRET,
-    salt: process.env.NODE_ENV === "production"
-      ? "__Secure-authjs.session-token"
-      : "authjs.session-token",
+    secureCookie: isSecureCookie,
+  }) ?? await getToken({
+    req,
+    secret: AUTH_SECRET,
+    secureCookie: !isSecureCookie,
   });
 
   if (!token) {
@@ -100,4 +105,3 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
-
