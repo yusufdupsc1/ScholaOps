@@ -22,6 +22,7 @@ const ADMIN_ROUTES = [
 ];
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+const AUTH_DEBUG = process.env.AUTH_DEBUG === "1";
 const SESSION_COOKIE_CANDIDATES = [
   "__Secure-authjs.session-token",
   "authjs.session-token",
@@ -52,6 +53,9 @@ export default async function middleware(req: NextRequest) {
   // getToken automatically handles cookie decryption using AUTH_SECRET
   const isSecureCookie = req.nextUrl.protocol === "https:" ||
     req.headers.get("x-forwarded-proto") === "https";
+  const presentCookies = SESSION_COOKIE_CANDIDATES.filter((cookieName) =>
+    Boolean(req.cookies.get(cookieName)?.value)
+  );
 
   let token = null;
   for (const cookieName of SESSION_COOKIE_CANDIDATES) {
@@ -79,11 +83,32 @@ export default async function middleware(req: NextRequest) {
   }
 
   if (!token) {
+    if (AUTH_DEBUG) {
+      console.log("[auth-debug] middleware redirect", {
+        pathname,
+        hasAuthSecret: Boolean(AUTH_SECRET),
+        isSecureCookie,
+        presentCookies,
+        tokenResolved: false,
+      });
+    }
     const loginUrl = new URL("/auth/login", req.url);
     if (pathname !== "/") {
       loginUrl.searchParams.set("callbackUrl", pathname);
     }
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (AUTH_DEBUG) {
+    console.log("[auth-debug] middleware pass", {
+      pathname,
+      hasAuthSecret: Boolean(AUTH_SECRET),
+      isSecureCookie,
+      presentCookies,
+      tokenResolved: true,
+      userId: token.sub,
+      role: token.role,
+    });
   }
 
   // 4. RBAC Check
