@@ -6,6 +6,9 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://app.scholaops.com",
+  ),
   title: {
     default: "scholaOps — Precision School Management",
     template: "%s | scholaOps",
@@ -34,8 +37,8 @@ export const metadata: Metadata = {
     description: "The professional operations platform for forward-thinking schools.",
   },
   robots: {
-    index: false,
-    follow: false,
+    index: true,
+    follow: true,
   },
 };
 

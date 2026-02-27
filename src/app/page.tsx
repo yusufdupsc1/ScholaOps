@@ -2,6 +2,20 @@ import Link from "next/link";
 import { ArrowRight, Sparkles, Users, BookOpen, BarChart3, ShieldCheck, Zap } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "scholaOps — Precision School Management",
+  description:
+    "Modern Bangladesh-first school operations platform for admissions, attendance, finance, and analytics.",
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default async function Home() {
   const session = await auth();
@@ -166,4 +180,3 @@ export default async function Home() {
     </div>
   );
 }
-
