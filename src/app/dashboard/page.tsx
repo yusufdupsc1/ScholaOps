@@ -1,7 +1,6 @@
 // src/app/dashboard/page.tsx
 // Dashboard Overview — React 19 Server Component
 
-import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { getDashboardStats } from "@/server/actions/students";
 import { db } from "@/lib/db";
@@ -11,7 +10,7 @@ import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { RecentStudents } from "@/components/dashboard/recent-students";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
-import { StatsSkeleton, ChartSkeleton } from "@/components/ui/skeletons";
+import { DEFAULT_LOCALE, DEFAULT_TIMEZONE } from "@/lib/utils";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -22,36 +21,62 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 async function getAttendanceData(institutionId: string) {
-  const last30Days = new Date();
-  last30Days.setDate(last30Days.getDate() - 30);
+  try {
+    const last30Days = new Date();
+    last30Days.setDate(last30Days.getDate() - 30);
 
-  const data = await db.attendance.groupBy({
-    by: ["date", "status"],
-    where: {
-      institutionId,
-      date: { gte: last30Days },
-    },
-    _count: true,
-    orderBy: { date: "asc" },
-  });
+    const data = await db.attendance.groupBy({
+      by: ["date", "status"],
+      where: {
+        institutionId,
+        date: { gte: last30Days },
+      },
+      _count: true,
+      orderBy: { date: "asc" },
+    });
 
-  return data;
+    return data;
+  } catch (error) {
+    console.error("[DASHBOARD_ATTENDANCE]", error);
+    return [];
+  }
 }
 
 async function getRevenueData(institutionId: string) {
-  const year = new Date().getFullYear();
-  const data = await db.payment.groupBy({
-    by: ["paidAt"],
-    where: {
-      institutionId,
-      paidAt: {
-        gte: new Date(`${year}-01-01`),
-        lte: new Date(`${year}-12-31`),
+  try {
+    const year = new Date().getFullYear();
+    const data = await db.payment.groupBy({
+      by: ["paidAt"],
+      where: {
+        institutionId,
+        paidAt: {
+          gte: new Date(`${year}-01-01`),
+          lte: new Date(`${year}-12-31`),
+        },
       },
-    },
-    _sum: { amount: true },
-  });
-  return data;
+      _sum: { amount: true },
+    });
+    return data;
+  } catch (error) {
+    console.error("[DASHBOARD_REVENUE]", error);
+    return [];
+  }
+}
+
+async function getUpcomingEvents(institutionId: string) {
+  try {
+    return await db.event.findMany({
+      where: {
+        institutionId,
+        startDate: { gte: new Date() },
+      },
+      orderBy: { startDate: "asc" },
+      take: 5,
+    });
+  } catch (error) {
+    console.error("[DASHBOARD_EVENTS]", error);
+    return [];
+  }
 }
 
 export default async function DashboardPage() {
@@ -68,16 +93,43 @@ export default async function DashboardPage() {
   const institutionId = user.institutionId;
   const institutionName = user.institutionName ?? "your institution";
   const userName = user.name?.split(" ")[0] ?? "there";
-  const hour = new Date().getHours();
+  const now = new Date();
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      hour12: false,
+      timeZone: DEFAULT_TIMEZONE,
+    }).format(now),
+  );
   const greeting =
     hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  const [statsResult, attendanceData, revenueData, events] =
+    await Promise.all([
+      getDashboardStats().catch((error) => {
+        console.error("[DASHBOARD_STATS]", error);
+        return null;
+      }),
+      getAttendanceData(institutionId),
+      getRevenueData(institutionId),
+      getUpcomingEvents(institutionId),
+    ]);
+
+  const stats = statsResult ?? {
+    totalStudents: 0,
+    totalTeachers: 0,
+    todayAttendance: 0,
+    pendingFees: { amount: 0, count: 0 },
+    recentStudents: [],
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Page Header */}
       <div className="flex flex-col gap-1">
         <p className="text-sm font-medium text-muted-foreground tracking-wide uppercase">
-          {new Date().toLocaleDateString("en-US", {
+          {now.toLocaleDateString(DEFAULT_LOCALE, {
+            timeZone: DEFAULT_TIMEZONE,
             weekday: "long",
             year: "numeric",
             month: "long",
@@ -95,74 +147,28 @@ export default async function DashboardPage() {
       </div>
 
       {/* KPI Stats */}
-      <Suspense fallback={<StatsSkeleton />}>
-        <StatsSection institutionId={institutionId} />
-      </Suspense>
+      <StatsGrid stats={stats} />
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Suspense fallback={<ChartSkeleton />}>
-            <AttendanceChartSection institutionId={institutionId} />
-          </Suspense>
+          <AttendanceChart data={attendanceData} />
         </div>
         <div>
-          <Suspense fallback={<ChartSkeleton />}>
-            <RevenueChartSection institutionId={institutionId} />
-          </Suspense>
+          <RevenueChart data={revenueData} />
         </div>
       </div>
 
       {/* Bottom Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Suspense fallback={<ChartSkeleton />}>
-            <RecentStudentsSection institutionId={institutionId} />
-          </Suspense>
+          <RecentStudents students={stats.recentStudents} />
         </div>
         <div className="space-y-6">
           <QuickActions />
-          <Suspense fallback={<ChartSkeleton />}>
-            <UpcomingEventsSection institutionId={institutionId} />
-          </Suspense>
+          <UpcomingEvents events={events} />
         </div>
       </div>
     </div>
   );
-}
-
-// ── Async sub-components (parallel data fetching via Suspense) ──
-
-async function StatsSection({ institutionId }: { institutionId: string }) {
-  void institutionId;
-  const stats = await getDashboardStats();
-  return <StatsGrid stats={stats} />;
-}
-
-async function AttendanceChartSection({ institutionId }: { institutionId: string }) {
-  const data = await getAttendanceData(institutionId);
-  return <AttendanceChart data={data} />;
-}
-
-async function RevenueChartSection({ institutionId }: { institutionId: string }) {
-  const data = await getRevenueData(institutionId);
-  return <RevenueChart data={data} />;
-}
-
-async function RecentStudentsSection({ institutionId }: { institutionId: string }) {
-  void institutionId;
-  const stats = await getDashboardStats();
-  return <RecentStudents students={stats.recentStudents} />;
-}
-
-async function UpcomingEventsSection({ institutionId }: { institutionId: string }) {
-  const events = await db.event.findMany({
-    where: {
-      institutionId,
-      startDate: { gte: new Date() },
-    },
-    orderBy: { startDate: "asc" },
-    take: 5,
-  });
-  return <UpcomingEvents events={events} />;
 }

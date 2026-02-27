@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   creator: "scholaOps",
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_BD",
     siteName: "scholaOps",
     title: "scholaOps — Modern Education Infrastructure",
     description: "The professional operations platform for forward-thinking schools.",

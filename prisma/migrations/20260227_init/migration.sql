@@ -45,9 +45,9 @@ CREATE TABLE "institutions" (
     "phone" TEXT,
     "address" TEXT,
     "city" TEXT,
-    "country" TEXT DEFAULT 'US',
-    "timezone" TEXT NOT NULL DEFAULT 'UTC',
-    "currency" TEXT NOT NULL DEFAULT 'USD',
+    "country" TEXT DEFAULT 'BD',
+    "timezone" TEXT NOT NULL DEFAULT 'Asia/Dhaka',
+    "currency" TEXT NOT NULL DEFAULT 'BDT',
     "plan" "Plan" NOT NULL DEFAULT 'STARTER',
     "planExpiry" TIMESTAMP(3),
     "isActive" BOOLEAN NOT NULL DEFAULT true,
@@ -576,4 +576,3 @@ ALTER TABLE "events" ADD CONSTRAINT "events_institutionId_fkey" FOREIGN KEY ("in
 
 -- AddForeignKey
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-

@@ -23,9 +23,9 @@ const InstitutionProfileSchema = z.object({
   website: z.string().url().optional().or(z.literal("")),
   address: z.string().optional(),
   city: z.string().optional(),
-  country: z.string().optional(),
-  timezone: z.string().default("UTC"),
-  currency: z.string().default("USD"),
+  country: z.string().optional().default("Bangladesh"),
+  timezone: z.string().default("Asia/Dhaka"),
+  currency: z.string().default("BDT"),
 });
 
 export type InstitutionSettingsData = z.infer<typeof InstitutionSettingsSchema>;

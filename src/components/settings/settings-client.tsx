@@ -3,14 +3,13 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Save, Building2, GraduationCap, Bell, BadgeDollarSign } from "lucide-react";
+import { Save, Building2, GraduationCap } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { updateInstitutionProfile, updateInstitutionSettings, type InstitutionProfileData, type InstitutionSettingsData } from "@/server/actions/settings";
 
 type Institution = {
@@ -44,9 +43,9 @@ function ProfileTab({ institution }: { institution: Institution }) {
         website: institution?.website ?? "",
         address: institution?.address ?? "",
         city: institution?.city ?? "",
-        country: institution?.country ?? "",
-        timezone: institution?.timezone ?? "UTC",
-        currency: institution?.currency ?? "USD",
+        country: institution?.country ?? "Bangladesh",
+        timezone: institution?.timezone ?? "Asia/Dhaka",
+        currency: institution?.currency ?? "BDT",
     });
     const set = (k: keyof InstitutionProfileData, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -96,7 +95,7 @@ function ProfileTab({ institution }: { institution: Institution }) {
                 </div>
                 <div className="space-y-1.5">
                     <Label htmlFor="inst-country">Country</Label>
-                    <Input id="inst-country" value={form.country ?? ""} onChange={e => set("country", e.target.value)} />
+                    <Input id="inst-country" value={form.country ?? ""} onChange={e => set("country", e.target.value)} placeholder="Bangladesh" />
                 </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -105,7 +104,7 @@ function ProfileTab({ institution }: { institution: Institution }) {
                     <Select value={form.timezone} onValueChange={v => set("timezone", v)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            {["UTC", "America/New_York", "America/Chicago", "America/Los_Angeles", "Europe/London", "Asia/Dubai", "Asia/Kolkata", "Asia/Dhaka", "Asia/Tokyo", "Australia/Sydney"].map(tz => (
+                            {["Asia/Dhaka", "Asia/Kolkata", "Asia/Dubai", "UTC"].map(tz => (
                                 <SelectItem key={tz} value={tz}>{tz}</SelectItem>
                             ))}
                         </SelectContent>
@@ -116,7 +115,7 @@ function ProfileTab({ institution }: { institution: Institution }) {
                     <Select value={form.currency} onValueChange={v => set("currency", v)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            {["USD", "EUR", "GBP", "BDT", "INR", "AED", "PKR", "NPR", "SGD", "AUD"].map(c => (
+                            {["BDT", "USD", "INR", "AED"].map(c => (
                                 <SelectItem key={c} value={c}>{c}</SelectItem>
                             ))}
                         </SelectContent>

@@ -15,10 +15,10 @@ const DEMO_INSTITUTION = {
   slug: "scholaops-demo",
   name: "scholaOps Academy",
   email: "admin@school.edu",
-  city: "Palo Alto",
-  country: "US",
-  timezone: "America/Los_Angeles",
-  currency: "USD",
+  city: "Dhaka",
+  country: "BD",
+  timezone: "Asia/Dhaka",
+  currency: "BDT",
 };
 
 const DEMO_USERS = [

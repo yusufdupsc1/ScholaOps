@@ -103,17 +103,20 @@ export async function registerInstitution(
     const lastName = nameParts.slice(1).join(" ") || firstName;
 
     // Create institution + admin user in a transaction
-    const result = await db.$transaction(async (tx) => {
+    await db.$transaction(async (tx) => {
       const institution = await tx.institution.create({
         data: {
           name: institutionName,
           slug,
           plan: "STARTER",
           email,
+          country: "BD",
+          timezone: "Asia/Dhaka",
+          currency: "BDT",
         },
       });
 
-      const user = await tx.user.create({
+      await tx.user.create({
         data: {
           email,
           name: adminName,
@@ -126,7 +129,6 @@ export async function registerInstitution(
         },
       });
 
-      return { institution, user };
     });
 
     // Send welcome email (non-blocking)

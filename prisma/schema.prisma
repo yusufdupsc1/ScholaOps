@@ -26,9 +26,9 @@ model Institution {
   phone       String?
   address     String?
   city        String?
-  country     String?  @default("US")
-  timezone    String   @default("UTC")
-  currency    String   @default("USD")
+  country     String?  @default("BD")
+  timezone    String   @default("Asia/Dhaka")
+  currency    String   @default("BDT")
   plan        Plan     @default(STARTER)
   planExpiry  DateTime?
   isActive    Boolean  @default(true)

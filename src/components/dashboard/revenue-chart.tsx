@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 interface RevenueRow {
   paidAt: Date;
@@ -17,7 +17,7 @@ export function RevenueChart({ data }: { data: RevenueRow[] }) {
         {data.length ? (
           data.map((row, idx) => (
             <div key={`${row.paidAt.toISOString()}-${idx}`} className="flex items-center justify-between rounded-xl bg-muted/30 px-4 py-3 text-sm hover:bg-muted/60 transition-colors border border-border/40">
-              <span className="font-medium text-muted-foreground">{row.paidAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+              <span className="font-medium text-muted-foreground">{formatDate(row.paidAt)}</span>
               <span className="font-bold text-foreground">{formatCurrency(Number(row._sum.amount ?? 0))}</span>
             </div>
           ))
