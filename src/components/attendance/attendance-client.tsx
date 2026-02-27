@@ -109,11 +109,11 @@ export function AttendanceClient({ classes, selectedClassId, selectedDate, summa
                         <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
                     </div>
                 ))}
-                <div className="rounded-xl border border-border bg-card p-4 col-span-2 sm:col-span-4 flex items-center gap-4">
+                <div className="rounded-xl border border-border bg-card p-4 col-span-2 sm:col-span-4 flex flex-col gap-3 sm:flex-row sm:items-center">
                     <div className="flex-1 bg-muted rounded-full h-2">
                         <div className="bg-green-500 h-2 rounded-full transition-all" style={{ width: `${summary.presentRate}%` }} />
                     </div>
-                    <span className="text-sm font-semibold">{summary.presentRate}% attendance rate (last 30 days)</span>
+                    <span className="text-center text-sm font-semibold sm:text-left">{summary.presentRate}% attendance rate (last 30 days)</span>
                 </div>
             </div>
 
@@ -121,7 +121,7 @@ export function AttendanceClient({ classes, selectedClassId, selectedDate, summa
             <div className="rounded-xl border border-border bg-card p-4">
                 <h2 className="font-semibold mb-3">Mark Attendance</h2>
                 <div className="flex flex-wrap gap-3 items-end">
-                    <div className="space-y-1.5">
+                    <div className="w-full space-y-1.5 sm:w-auto">
                         <Label>Class</Label>
                         <Select value={classId} onValueChange={v => { setClassId(v); setLoaded(false); }}>
                             <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Select class" /></SelectTrigger>
@@ -130,11 +130,11 @@ export function AttendanceClient({ classes, selectedClassId, selectedDate, summa
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="w-full space-y-1.5 sm:w-auto">
                         <Label>Date</Label>
                         <Input type="date" value={date} onChange={e => { setDate(e.target.value); setLoaded(false); }} className="w-full sm:w-40" />
                     </div>
-                    <Button onClick={loadStudents} disabled={pending || !classId}>
+                    <Button onClick={loadStudents} disabled={pending || !classId} className="w-full sm:w-auto">
                         <Users className="h-4 w-4 mr-1.5" /> Load Students
                     </Button>
                 </div>
@@ -158,15 +158,29 @@ export function AttendanceClient({ classes, selectedClassId, selectedDate, summa
                     <div className="divide-y divide-border/60">
                         {students.map(s => {
                             const status = attendanceMap[s.id] ?? "PRESENT";
-                            const cfg = STATUS_CONFIG[status];
+                            const statusOptions = (Object.keys(STATUS_CONFIG) as AttendanceStatus[]).filter(k => k !== "HOLIDAY");
                             return (
-                                <div key={s.id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
-                                    <div>
+                                <div key={s.id} className="flex flex-col gap-2 px-4 py-3 hover:bg-muted/30 transition-colors sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="min-w-0">
                                         <p className="font-medium text-sm">{s.firstName} {s.lastName}</p>
                                         <p className="text-xs text-muted-foreground font-mono">{s.studentId}</p>
                                     </div>
-                                    <div className="flex gap-1.5">
-                                        {(Object.keys(STATUS_CONFIG) as AttendanceStatus[]).filter(k => k !== "HOLIDAY").map(k => {
+                                    <div className="sm:hidden">
+                                        <Select value={status} onValueChange={(v) => setStatus(s.id, v as AttendanceStatus)}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Select attendance status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {statusOptions.map((k) => (
+                                                    <SelectItem key={k} value={k}>
+                                                        {STATUS_CONFIG[k].label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="hidden flex-wrap justify-end gap-1.5 sm:flex">
+                                        {statusOptions.map(k => {
                                             const c = STATUS_CONFIG[k];
                                             const Icon = c.icon;
                                             return (
