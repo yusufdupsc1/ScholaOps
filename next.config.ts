@@ -7,6 +7,9 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig: NextConfig = {
+  // Required for Docker "standalone" runtime image
+  output: "standalone",
+
   // TypeScript — errors block production builds
   typescript: { ignoreBuildErrors: false },
 

@@ -1,16 +1,40 @@
-node_modules
-.next
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build artifacts
+.next/
+out/
 tsconfig.tsbuildinfo
+
+# Logs
+*.log
 npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+dev_logs.txt
+server_run.log
+
+# Local runtime state
+*.pid
+*_pid.txt
+server_pid.txt
+dev_pid.txt
+
+# Environment files
 .env
 .env.local
 .env.*.local
+!.env.example
+
+# Reports
+coverage/
+playwright-report/
+test-results/
+
+# OS/editor
 .DS_Store
-*.log
-*.txt
-*_pid.txt
-dev_logs.txt
-server_pid.txt
-server_run.log
-test_bcrypt.ts
+
+# Local scratch scripts
 check.ts
+test_bcrypt.ts
