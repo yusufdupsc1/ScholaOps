@@ -24,8 +24,9 @@ const providers: any[] = [
         return null;
       }
 
+      const normalizedEmail = email.trim().toLowerCase();
       const user = await db.user.findUnique({
-        where: { email },
+        where: { email: normalizedEmail },
         include: { institution: { select: { name: true, slug: true } } },
       });
 

@@ -1,4 +1,21 @@
 import { PrismaClient } from "@prisma/client";
+import { config as loadEnv } from "dotenv";
+
+// In local/dev, ensure file-based env values are the source of truth.
+// This prevents stale shell exports from overriding DATABASE_URL.
+if (process.env.NODE_ENV !== "production") {
+  loadEnv({ path: ".env" });
+  loadEnv({ path: ".env.local", override: true });
+}
+
+function getDbHostFromUrl(url?: string): string {
+  if (!url) return "missing";
+  try {
+    return new URL(url).host;
+  } catch {
+    return "invalid";
+  }
+}
 
 function createMockModel() {
   return new Proxy(
@@ -52,10 +69,12 @@ const globalForPrisma = globalThis as { prisma?: unknown };
 
 function createDbClient() {
   try {
+    const datasourceUrl = process.env.DATABASE_URL;
     const client = new PrismaClient({
+      datasourceUrl,
       log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
     });
-    console.log("[db] Real database client initialized.");
+    console.log(`[db] Real database client initialized (host=${getDbHostFromUrl(datasourceUrl)}).`);
     return client;
   } catch (error) {
     console.warn("[db] Falling back to mock database client.", error);

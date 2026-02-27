@@ -1,6 +1,12 @@
 // prisma/seed.ts
+import { config as loadEnv } from "dotenv";
 import { PrismaClient, Role, Plan, Gender, StudentStatus, EmployeeStatus, AttendanceStatus, FeeType, FeeStatus } from "@prisma/client";
 import bcryptjs from "bcryptjs";
+
+// Keep seed behavior deterministic across shells:
+// 1) load .env defaults, 2) override with .env.local if present.
+loadEnv({ path: ".env" });
+loadEnv({ path: ".env.local", override: true });
 
 const db = new PrismaClient();
 
@@ -42,7 +48,14 @@ async function main() {
   const hashedPassword = await bcryptjs.hash("admin123", 12);
   const adminUser = await db.user.upsert({
     where: { email: "admin@school.edu" },
-    update: {},
+    update: {
+      name: "Alex Admin",
+      password: hashedPassword,
+      role: Role.ADMIN,
+      emailVerified: new Date(),
+      isActive: true,
+      institutionId: institution.id,
+    },
     create: {
       name: "Alex Admin",
       email: "admin@school.edu",
@@ -58,7 +71,14 @@ async function main() {
   const principalPwd = await bcryptjs.hash("principal123", 12);
   await db.user.upsert({
     where: { email: "principal@school.edu" },
-    update: {},
+    update: {
+      name: "Dr. Sarah Chen",
+      password: principalPwd,
+      role: Role.PRINCIPAL,
+      emailVerified: new Date(),
+      isActive: true,
+      institutionId: institution.id,
+    },
     create: {
       name: "Dr. Sarah Chen",
       email: "principal@school.edu",
@@ -80,15 +100,15 @@ async function main() {
     { name: "Art & Design", code: "ART", isCore: false },
   ];
 
-  const subjects = await Promise.all(
-    subjectData.map((s) =>
-      db.subject.upsert({
-        where: { institutionId_code: { institutionId: institution.id, code: s.code } },
-        update: {},
-        create: { ...s, institutionId: institution.id },
-      })
-    )
-  );
+  const subjects = [];
+  for (const s of subjectData) {
+    const subject = await db.subject.upsert({
+      where: { institutionId_code: { institutionId: institution.id, code: s.code } },
+      update: {},
+      create: { ...s, institutionId: institution.id },
+    });
+    subjects.push(subject);
+  }
   console.log(`✅ Subjects: ${subjects.length}`);
 
   // ── Classes ──────────────────────────────────
@@ -101,27 +121,27 @@ async function main() {
     { name: "Grade 12A", grade: "12", section: "A" },
   ];
 
-  const classes = await Promise.all(
-    classData.map((c) =>
-      db.class.upsert({
-        where: {
-          institutionId_grade_section_academicYear: {
-            institutionId: institution.id,
-            grade: c.grade,
-            section: c.section,
-            academicYear: "2024-2025",
-          },
-        },
-        update: {},
-        create: {
-          ...c,
-          academicYear: "2024-2025",
-          capacity: 30,
+  const classes = [];
+  for (const c of classData) {
+    const classroom = await db.class.upsert({
+      where: {
+        institutionId_grade_section_academicYear: {
           institutionId: institution.id,
+          grade: c.grade,
+          section: c.section,
+          academicYear: "2024-2025",
         },
-      })
-    )
-  );
+      },
+      update: {},
+      create: {
+        ...c,
+        academicYear: "2024-2025",
+        capacity: 30,
+        institutionId: institution.id,
+      },
+    });
+    classes.push(classroom);
+  }
   console.log(`✅ Classes: ${classes.length}`);
 
   // ── Teachers ─────────────────────────────────
@@ -132,27 +152,28 @@ async function main() {
     { firstName: "Emily", lastName: "Thompson", email: "e.thompson@school.edu", specialization: "English" },
   ];
 
-  const teachers = await Promise.all(
-    teacherData.map((t, i) =>
-      db.teacher.upsert({
-        where: {
-          institutionId_teacherId: {
-            institutionId: institution.id,
-            teacherId: `TCH-2024-${String(i + 1).padStart(3, "0")}`,
-          },
-        },
-        update: {},
-        create: {
-          ...t,
-          teacherId: `TCH-2024-${String(i + 1).padStart(3, "0")}`,
-          gender: Gender.MALE,
-          salary: 55000 + i * 5000,
-          status: EmployeeStatus.ACTIVE,
+  const teachers = [];
+  for (let i = 0; i < teacherData.length; i++) {
+    const t = teacherData[i];
+    const teacher = await db.teacher.upsert({
+      where: {
+        institutionId_teacherId: {
           institutionId: institution.id,
+          teacherId: `TCH-2024-${String(i + 1).padStart(3, "0")}`,
         },
-      })
-    )
-  );
+      },
+      update: {},
+      create: {
+        ...t,
+        teacherId: `TCH-2024-${String(i + 1).padStart(3, "0")}`,
+        gender: Gender.MALE,
+        salary: 55000 + i * 5000,
+        status: EmployeeStatus.ACTIVE,
+        institutionId: institution.id,
+      },
+    });
+    teachers.push(teacher);
+  }
   console.log(`✅ Teachers: ${teachers.length}`);
 
   // ── Students ─────────────────────────────────
