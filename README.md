@@ -1,4 +1,4 @@
-# scholaOps
+# ScholaOps
 
 [![CI / CD](https://github.com/yusufdupsc1/ScholaOps/actions/workflows/ci.yml/badge.svg)](https://github.com/yusufdupsc1/ScholaOps/actions/workflows/ci.yml)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
