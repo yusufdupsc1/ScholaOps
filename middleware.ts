@@ -88,7 +88,7 @@ export default async function middleware(req: NextRequest) {
 
   if (!token) {
     if (AUTH_DEBUG) {
-      console.log("[auth-debug] middleware redirect", {
+      console.log("[auth-debug] middleware skip (no token)", {
         pathname,
         hasAuthSecret: AUTH_SECRETS.length > 0,
         isSecureCookie,
@@ -96,11 +96,7 @@ export default async function middleware(req: NextRequest) {
         tokenResolved: false,
       });
     }
-    const loginUrl = new URL("/auth/login", req.url);
-    if (pathname !== "/") {
-      loginUrl.searchParams.set("callbackUrl", pathname);
-    }
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.next();
   }
 
   if (AUTH_DEBUG) {
