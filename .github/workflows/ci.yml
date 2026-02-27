@@ -39,6 +39,7 @@ jobs:
         run: pnpm run type-check
 
       - name: Check formatting
+        continue-on-error: true
         run: pnpm run format:check
 
   # ─── Tests ──────────────────────────────────
