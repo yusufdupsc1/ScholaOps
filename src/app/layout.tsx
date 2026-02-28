@@ -1,6 +1,19 @@
 // src/app/layout.tsx
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import "@/styles/globals.css";
+
+const geistSans = localFont({
+  src: "../assets/fonts/GeistLike-Regular.ttf",
+  variable: "--font-geist-sans",
+  display: "swap",
+});
+
+const geistMono = localFont({
+  src: "../assets/fonts/GeistLike-Mono.ttf",
+  variable: "--font-geist-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -54,7 +67,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable}`}
+    >
       <body className="font-sans antialiased">{children}</body>
     </html>
   );

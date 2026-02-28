@@ -4,8 +4,25 @@
 
 /* ─── Custom Fonts ─── */
 @theme {
-  --font-sans: var(--font-syne), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-mono), ui-monospace, monospace;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* ERP semantic tokens */
+  --color-brand-50: #eff6ff;
+  --color-brand-600: #2563eb;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-muted-text: #64748b;
+  --color-ui-border: #e2e8f0;
+  --color-success-fg: #166534;
+  --color-success-bg: #dcfce7;
+  --color-warning-fg: #92400e;
+  --color-warning-bg: #fef3c7;
+  --color-error-fg: #991b1b;
+  --color-error-bg: #fee2e2;
+  --color-info-fg: #1e40af;
+  --color-info-bg: #dbeafe;
 
   /* Theme color mappings for Tailwind v4 */
   --color-background: hsl(var(--background));
@@ -30,48 +47,54 @@
   --color-ring: hsl(var(--ring));
 
   --radius: var(--radius);
+  --radius-card: 12px;
+  --shadow-card:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 6px 16px rgb(0 0 0 / 0.06);
+
+  --spacing-18: 4.5rem;
 }
 
 /* ─── Design Token Layer ─── */
 @layer base {
   :root {
-    /* Light mode — warm parchment editorial */
-    --background: 40 15% 97%;
-    --foreground: 220 20% 8%;
+    /* Light mode — high-trust slate/blue */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 8%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 8%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 220 80% 40%;
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 40 15% 93%;
-    --secondary-foreground: 220 20% 20%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 20%;
 
-    --muted: 40 12% 92%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 28 90% 52%;
+    --accent: 38 92% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 88%;
-    --input: 220 13% 88%;
-    --ring: 220 80% 40%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
     /* Custom semantic tokens */
-    --success: 142 76% 36%;
+    --success: 142 71% 25%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 10%;
-    --info: 199 89% 48%;
+    --warning-foreground: 38 86% 20%;
+    --info: 221 69% 38%;
     --info-foreground: 0 0% 100%;
 
     /* Chart palette */

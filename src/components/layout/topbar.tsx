@@ -1,5 +1,3 @@
-"use client";
-
 import { Bell } from "lucide-react";
 import type { Session } from "next-auth";
 

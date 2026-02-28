@@ -7,7 +7,6 @@ import { signOut } from "next-auth/react";
 import type { Session } from "next-auth";
 import {
   LayoutDashboard,
-  Sparkles,
   Users,
   ClipboardCheck,
   CreditCard,
@@ -133,7 +132,10 @@ export function Sidebar({ session }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+        <nav
+          aria-label="Primary"
+          className="flex-1 overflow-y-auto py-3 px-2 space-y-4"
+        >
           {NAV_SECTIONS.map((section) => {
             const visibleItems = section.items.filter(
               (item) =>

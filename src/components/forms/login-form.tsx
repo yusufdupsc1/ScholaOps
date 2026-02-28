@@ -9,7 +9,6 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
-import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,19 +85,12 @@ export function LoginForm({ callbackUrl, error }: LoginFormProps) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="space-y-6"
-    >
+    <div className="space-y-6 animate-fade-in">
       {formError && (
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-          <Alert variant="destructive" className="border-destructive/50 bg-destructive/10 text-destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{formError}</AlertDescription>
-          </Alert>
-        </motion.div>
+        <Alert variant="destructive" className="border-destructive/50 bg-destructive/10 text-destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{formError}</AlertDescription>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -211,10 +203,7 @@ export function LoginForm({ callbackUrl, error }: LoginFormProps) {
       </Button>
 
       {/* Demo credentials hint */}
-      <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-        className="rounded-xl border border-dashed border-primary/20 p-4 bg-primary/5 shadow-sm"
-      >
+      <div className="rounded-xl border border-dashed border-primary/20 bg-primary/5 p-4 shadow-sm">
         <p className="text-xs font-semibold text-primary mb-2 flex items-center gap-1.5">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -232,7 +221,7 @@ export function LoginForm({ callbackUrl, error }: LoginFormProps) {
             <span className="text-muted-foreground group-hover:text-primary transition-colors text-xs">principal123</span>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

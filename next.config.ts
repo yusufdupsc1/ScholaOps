@@ -6,9 +6,16 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
+const isDev = process.env.NODE_ENV === "development";
+
 const nextConfig: NextConfig = {
   // Required for Docker "standalone" runtime image
   output: "standalone",
+
+  // Reduce client bundle overhead for large many-export packages.
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
 
   // TypeScript — errors block production builds
   typescript: { ignoreBuildErrors: false },
@@ -29,6 +36,10 @@ const nextConfig: NextConfig = {
             value: "camera=(), microphone=(), geolocation=()",
           },
           {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin-allow-popups",
+          },
+          {
             key: "Strict-Transport-Security",
             value: "max-age=63072000; includeSubDomains; preload",
           },
@@ -36,12 +47,21 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              [
+                "script-src 'self' 'unsafe-inline' https://js.stripe.com https://vercel.live",
+                isDev ? "'unsafe-eval'" : "",
+              ]
+                .filter(Boolean)
+                .join(" "),
+              "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https: https://utfs.io",
-              "font-src 'self' https://fonts.gstatic.com",
+              "font-src 'self' data:",
               "frame-src https://js.stripe.com https://hooks.stripe.com",
-              "connect-src 'self' https://api.stripe.com https://uploadthing.com wss:",
+              "connect-src 'self' https://api.stripe.com https://uploadthing.com https://vercel.live wss:",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "frame-ancestors 'self'",
+              "form-action 'self'",
             ].join("; "),
           },
         ],

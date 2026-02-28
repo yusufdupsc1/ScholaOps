@@ -1,9 +1,6 @@
-"use client";
-
 import { Users, UserCheck, ClipboardCheck, CreditCard } from "lucide-react";
 
 import { formatCurrency } from "@/lib/utils";
-import { motion } from "motion/react";
 
 interface StatsData {
   totalStudents: number;
@@ -25,29 +22,10 @@ export function StatsGrid({ stats }: { stats: StatsData }) {
     },
   ];
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-  };
-
   return (
-    <motion.section
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
-    >
+    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => (
-        <motion.article
-          variants={item}
+        <article
           key={card.label}
           className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card p-4 shadow-sm transition-all duration-300 hover:border-border hover:shadow-md sm:p-6"
         >
@@ -59,11 +37,13 @@ export function StatsGrid({ stats }: { stats: StatsData }) {
             </div>
           </div>
           <div className="relative z-10">
-            <p className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{card.value}</p>
+            <p className="text-2xl font-bold tracking-tight tabular-nums text-foreground sm:text-3xl">
+              {card.value}
+            </p>
             {card.subtitle ? <p className="mt-1 text-sm font-medium text-muted-foreground">{card.subtitle}</p> : null}
           </div>
-        </motion.article>
+        </article>
       ))}
-    </motion.section>
+    </section>
   );
 }

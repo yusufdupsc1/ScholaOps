@@ -24,6 +24,12 @@ export default async function DashboardLayout({
 
   return (
     <>
+      <a
+        href="#dashboard-main"
+        className="sr-only absolute left-3 top-3 z-[100] rounded-md bg-background px-3 py-2 text-sm text-foreground shadow focus:not-sr-only"
+      >
+        Skip to main content
+      </a>
       <div className="safe-bottom flex min-h-svh overflow-hidden bg-background/80">
         {/* Desktop Sidebar */}
         <Sidebar session={session} />
@@ -33,7 +39,7 @@ export default async function DashboardLayout({
           <TopBar session={session} />
 
           {/* Page content */}
-          <main className="flex-1 overflow-y-auto">
+          <main id="dashboard-main" className="flex-1 overflow-y-auto">
             <div className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
               <div className="pb-24 lg:pb-2">{children}</div>
             </div>
