@@ -2,26 +2,55 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, GraduationCap, Users, Calendar } from "lucide-react";
+import { LayoutDashboard, GraduationCap, Users, Calendar, ClipboardCheck, School, Bell } from "lucide-react";
 import type { Session } from "next-auth";
 import { cn } from "@/lib/utils";
 
-const ITEMS = [
-  { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-  { href: "/dashboard/students", label: "Students", icon: GraduationCap },
-  { href: "/dashboard/teachers", label: "Teachers", icon: Users },
-  { href: "/dashboard/events", label: "Events", icon: Calendar },
-];
+function getItems(role?: string) {
+  if (role === "STUDENT") {
+    return [
+      { href: "/dashboard/portal/student", label: "Portal", icon: LayoutDashboard },
+      { href: "/dashboard/portal/student", label: "Fees", icon: GraduationCap },
+      { href: "/dashboard/portal/student", label: "Grades", icon: School },
+      { href: "/dashboard/portal/student", label: "Alerts", icon: Bell },
+    ];
+  }
+  if (role === "PARENT") {
+    return [
+      { href: "/dashboard/portal/parent", label: "Portal", icon: LayoutDashboard },
+      { href: "/dashboard/portal/parent", label: "Children", icon: Users },
+      { href: "/dashboard/portal/parent", label: "Fees", icon: GraduationCap },
+      { href: "/dashboard/portal/parent", label: "Alerts", icon: Bell },
+    ];
+  }
+  if (role === "TEACHER") {
+    return [
+      { href: "/dashboard/portal/teacher", label: "Portal", icon: LayoutDashboard },
+      { href: "/dashboard/attendance", label: "Attendance", icon: ClipboardCheck },
+      { href: "/dashboard/grades", label: "Grades", icon: School },
+      { href: "/dashboard/events", label: "Events", icon: Calendar },
+    ];
+  }
 
-export function MobileNav({ session: _session }: { session: Session }) {
+  return [
+    { href: "/dashboard", label: "Home", icon: LayoutDashboard },
+    { href: "/dashboard/students", label: "Students", icon: GraduationCap },
+    { href: "/dashboard/teachers", label: "Teachers", icon: Users },
+    { href: "/dashboard/events", label: "Events", icon: Calendar },
+  ];
+}
+
+export function MobileNav({ session }: { session: Session }) {
   const pathname = usePathname();
+  const role = (session.user as { role?: string } | undefined)?.role;
+  const items = getItems(role);
 
   return (
     <nav
       aria-label="Mobile primary"
       className="safe-bottom fixed inset-x-0 bottom-0 z-50 grid h-16 grid-cols-4 border-t border-border/80 bg-background/90 shadow-[0_-8px_30px_hsl(var(--foreground)/0.06)] backdrop-blur supports-[backdrop-filter]:bg-background/75 lg:hidden"
     >
-      {ITEMS.map((item) => {
+      {items.map((item) => {
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link

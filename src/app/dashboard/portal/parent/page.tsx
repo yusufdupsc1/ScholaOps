@@ -1,4 +1,3 @@
-// src/app/dashboard/portal/parent/page.tsx
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -7,16 +6,27 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { safeLoader } from "@/lib/server/safe-loader";
 import { formatCurrency } from "@/lib/utils";
+import { FeePaymentActions } from "@/components/finance/fee-payment-actions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Parent Portal" };
 export const dynamic = "force-dynamic";
 
-async function getParentData(institutionId: string, userId: string) {
-  const parent = await db.parent.findFirst({
-    where: { userId },
+interface PageProps {
+  searchParams: Promise<{ payment?: string; gateway?: string }>;
+}
+
+async function getParentData(institutionId: string, userEmail?: string | null) {
+  const normalizedEmail = userEmail?.trim().toLowerCase();
+  if (!normalizedEmail) return null;
+
+  const parentLinks = await db.parent.findMany({
+    where: {
+      email: { equals: normalizedEmail, mode: "insensitive" },
+      student: { institutionId },
+    },
     include: {
-      students: {
+      student: {
         include: {
           class: { select: { name: true } },
           grades: {
@@ -25,10 +35,11 @@ async function getParentData(institutionId: string, userId: string) {
             take: 10,
           },
           fees: {
+            include: { payments: { select: { amount: true } } },
             orderBy: { dueDate: "desc" },
             take: 10,
           },
-          attendances: {
+          attendance: {
             where: {
               date: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
             },
@@ -38,7 +49,7 @@ async function getParentData(institutionId: string, userId: string) {
     },
   });
 
-  if (!parent) return null;
+  if (parentLinks.length === 0) return null;
 
   const announcements = await db.announcement.findMany({
     where: {
@@ -50,16 +61,24 @@ async function getParentData(institutionId: string, userId: string) {
     take: 5,
   });
 
-  return { parent, announcements };
+  return {
+    parentName: `${parentLinks[0].firstName} ${parentLinks[0].lastName}`.trim(),
+    students: parentLinks.map((link: any) => ({
+      relation: link.relation,
+      student: link.student,
+    })),
+    announcements,
+  };
 }
 
-export default async function ParentPortalPage() {
+export default async function ParentPortalPage({ searchParams }: PageProps) {
+  const params = await searchParams;
   const session = await auth();
   const user = session?.user as
-    | { id?: string; institutionId?: string; role?: string }
+    | { institutionId?: string; role?: string; email?: string | null }
     | undefined;
 
-  if (!user?.id || !user?.institutionId) {
+  if (!user?.institutionId) {
     redirect("/auth/login");
   }
 
@@ -69,9 +88,9 @@ export default async function ParentPortalPage() {
 
   const data = await safeLoader(
     "DASHBOARD_PARENT_PORTAL",
-    () => getParentData(user.institutionId, user.id),
+    () => getParentData(user.institutionId, user.email),
     null,
-    { institutionId: user.institutionId, userId: user.id },
+    { institutionId: user.institutionId, userEmail: user.email },
   );
 
   if (!data) {
@@ -88,25 +107,38 @@ export default async function ParentPortalPage() {
     );
   }
 
-  const { parent, announcements } = data;
-  const { students } = parent;
-
-  const totalUnpaid = students.reduce(
-    (sum, student) =>
-      sum +
-      student.fees
-        .filter((f) => f.status !== "PAID")
-        .reduce((fSum, f) => fSum + Number(f.amount), 0),
-    0,
-  );
+  const { parentName, announcements, students } = data;
+  const totalUnpaid = students.reduce((sum: number, row: any) => {
+    const unpaidTotal = row.student.fees
+      .filter((f: any) => ["UNPAID", "PARTIAL", "OVERDUE"].includes(f.status))
+      .reduce((feeSum: number, fee: any) => {
+        const paid = (fee.payments ?? []).reduce((pSum: number, p: any) => pSum + Number(p.amount), 0);
+        return feeSum + Math.max(0, Number(fee.amount) - paid);
+      }, 0);
+    return sum + unpaidTotal;
+  }, 0);
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {params.payment ? (
+        <Card
+          className={
+            params.payment === "success"
+              ? "border-green-500/40 bg-green-500/5"
+              : "border-yellow-500/40 bg-yellow-500/5"
+          }
+        >
+          <CardContent className="py-3 text-sm">
+            {params.payment === "success"
+              ? `Payment received via ${params.gateway ?? "gateway"}.`
+              : `Payment ${params.payment}. You can try again.`}
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">Welcome,</p>
-        <h1 className="text-xl font-bold sm:text-2xl">
-          {parent.firstName} {parent.lastName}
-        </h1>
+        <h1 className="text-xl font-bold sm:text-2xl">{parentName}</h1>
         <p className="text-sm text-muted-foreground sm:text-base">
           Managing {students.length} student{students.length !== 1 ? "s" : ""}
         </p>
@@ -124,14 +156,10 @@ export default async function ParentPortalPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Outstanding Fees
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Outstanding Fees</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(totalUnpaid)}
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency(totalUnpaid)}</div>
           </CardContent>
         </Card>
 
@@ -145,54 +173,46 @@ export default async function ParentPortalPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue={students[0]?.id}>
+      <Tabs defaultValue={students[0]?.student.id}>
         <TabsList className="w-full justify-start">
-          {students.map((student) => (
-            <TabsTrigger key={student.id} value={student.id}>
-              {student.firstName} {student.lastName}
+          {students.map((row: any) => (
+            <TabsTrigger key={row.student.id} value={row.student.id}>
+              {row.student.firstName} {row.student.lastName}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {students.map((student) => {
-          const presentCount = student.attendances.filter(
-            (a) => a.status === "PRESENT",
-          ).length;
-          const total = student.attendances.length;
-          const attendanceRate =
-            total > 0 ? Math.round((presentCount / total) * 100) : 0;
+        {students.map((row: any) => {
+          const student = row.student;
+          const presentCount = student.attendance.filter((a: any) => a.status === "PRESENT").length;
+          const total = student.attendance.length;
+          const attendanceRate = total > 0 ? Math.round((presentCount / total) * 100) : 0;
 
           const avgGrade =
             student.grades.length > 0
               ? Math.round(
-                  student.grades.reduce((sum, g) => sum + g.percentage, 0) /
+                  student.grades.reduce((sum: number, g: any) => sum + g.percentage, 0) /
                     student.grades.length,
                 )
               : null;
 
-          const unpaidStudentFees = student.fees.filter(
-            (f) => f.status !== "PAID",
+          const unpaidStudentFees = student.fees.filter((f: any) =>
+            ["UNPAID", "PARTIAL", "OVERDUE"].includes(f.status),
           );
 
           return (
-            <TabsContent
-              key={student.id}
-              value={student.id}
-              className="space-y-4"
-            >
+            <TabsContent key={student.id} value={student.id} className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                 <div className="flex-1">
                   <p className="font-medium">
                     {student.firstName} {student.lastName}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {student.class?.name} • ID: {student.studentId}
+                    {student.class?.name} • ID: {student.studentId} • {row.relation}
                   </p>
                 </div>
                 <div className="text-left sm:text-right">
-                  <Badge
-                    variant={attendanceRate >= 75 ? "default" : "destructive"}
-                  >
+                  <Badge variant={attendanceRate >= 75 ? "default" : "destructive"}>
                     {attendanceRate}% Attendance
                   </Badge>
                 </div>
@@ -205,12 +225,10 @@ export default async function ParentPortalPage() {
                   </CardHeader>
                   <CardContent>
                     {student.grades.length === 0 ? (
-                      <p className="text-muted-foreground text-sm">
-                        No grades yet.
-                      </p>
+                      <p className="text-muted-foreground text-sm">No grades yet.</p>
                     ) : (
                       <div className="space-y-2">
-                        {student.grades.slice(0, 5).map((grade) => (
+                        {student.grades.slice(0, 5).map((grade: any) => (
                           <div key={grade.id} className="flex justify-between gap-3 text-sm">
                             <span>{grade.subject.name}</span>
                             <span className="font-medium">
@@ -235,19 +253,22 @@ export default async function ParentPortalPage() {
                   </CardHeader>
                   <CardContent>
                     {unpaidStudentFees.length === 0 ? (
-                      <p className="text-muted-foreground text-sm">
-                        All fees paid!
-                      </p>
+                      <p className="text-muted-foreground text-sm">All fees paid!</p>
                     ) : (
-                      <div className="space-y-2">
-                        {unpaidStudentFees.map((fee) => (
-                          <div key={fee.id} className="flex justify-between gap-3 text-sm">
-                            <span>{fee.title}</span>
-                            <span className="font-medium">
-                              {formatCurrency(Number(fee.amount))}
-                            </span>
-                          </div>
-                        ))}
+                      <div className="space-y-3">
+                        {unpaidStudentFees.map((fee: any) => {
+                          const paid = (fee.payments ?? []).reduce((pSum: number, p: any) => pSum + Number(p.amount), 0);
+                          const remaining = Math.max(0, Number(fee.amount) - paid);
+                          return (
+                            <div key={fee.id} className="rounded-lg border border-border/70 p-3">
+                              <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+                                <span>{fee.title}</span>
+                                <span className="font-medium">{formatCurrency(remaining)}</span>
+                              </div>
+                              <FeePaymentActions feeId={fee.id} />
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </CardContent>
@@ -267,11 +288,8 @@ export default async function ParentPortalPage() {
             <p className="text-muted-foreground text-sm">No announcements.</p>
           ) : (
             <div className="space-y-3">
-              {announcements.map((announcement) => (
-                <div
-                  key={announcement.id}
-                  className="border-b pb-3 last:border-0"
-                >
+              {announcements.map((announcement: any) => (
+                <div key={announcement.id} className="border-b pb-3 last:border-0">
                   <div className="mb-1 flex flex-wrap items-center gap-2">
                     <p className="font-medium">{announcement.title}</p>
                     <Badge variant="outline">{announcement.priority}</Badge>

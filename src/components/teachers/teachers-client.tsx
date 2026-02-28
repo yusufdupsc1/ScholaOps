@@ -62,6 +62,16 @@ function TeacherForm({ initial, subjects: _subjects, onSuccess }: { initial?: Te
             const res = initial ? await updateTeacher(initial.id, form) : await createTeacher(form);
             if (res.success) {
                 toast.success(initial ? "Teacher updated" : "Teacher created");
+                const credential =
+                    !initial && res.data && typeof res.data === "object" && "credential" in res.data
+                        ? (res.data as { credential?: { email: string; password: string } }).credential
+                        : null;
+                if (!initial && credential) {
+                    toast.info(
+                        `Teacher login: ${credential.email} / ${credential.password}`,
+                        { duration: 12000 },
+                    );
+                }
                 onSuccess();
             } else {
                 toast.error(res.error);

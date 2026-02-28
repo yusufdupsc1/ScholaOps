@@ -2,6 +2,7 @@
 // Dashboard Overview — React 19 Server Component
 
 import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { getDashboardStats } from "@/server/actions/students";
 import { db } from "@/lib/db";
 import { StatsGrid } from "@/components/dashboard/stats-grid";
@@ -12,6 +13,7 @@ import { QuickActions } from "@/components/dashboard/quick-actions";
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
 import { DEFAULT_LOCALE, DEFAULT_TIMEZONE } from "@/lib/utils";
 import { safeLoader } from "@/lib/server/safe-loader";
+import { getDefaultDashboardPath } from "@/lib/role-routing";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -97,9 +99,14 @@ export default async function DashboardPage() {
     institutionId?: string;
     institutionName?: string;
     name?: string | null;
+    role?: string;
   } | undefined;
   if (!user?.institutionId) {
     return null;
+  }
+
+  if (user.role && ["TEACHER", "STUDENT", "PARENT"].includes(user.role)) {
+    redirect(getDefaultDashboardPath(user.role));
   }
 
   const institutionId = user.institutionId;

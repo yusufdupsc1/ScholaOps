@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Download, Eye, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,7 @@ export function ReportPreview({
   previewRecordId = null,
   onPreviewRecordHandled,
 }: ReportPreviewProps) {
-  const [previewRecord, setPreviewRecord] = useState<StudentRecordItem | null>(null);
+  const [manualPreviewId, setManualPreviewId] = useState<string | null>(null);
   const groups = Object.entries(grouped);
   const recordById = useMemo(
     () =>
@@ -56,13 +56,8 @@ export function ReportPreview({
     [grouped],
   );
 
-  useEffect(() => {
-    if (!previewRecordId) return;
-    const record = recordById[previewRecordId];
-    if (!record) return;
-    setPreviewRecord(record);
-    onPreviewRecordHandled?.();
-  }, [onPreviewRecordHandled, previewRecordId, recordById]);
+  const activePreviewId = manualPreviewId ?? previewRecordId ?? null;
+  const previewRecord = activePreviewId ? recordById[activePreviewId] ?? null : null;
 
   return (
     <section className="rounded-xl border border-border bg-card p-4">
@@ -94,7 +89,15 @@ export function ReportPreview({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Button type="button" size="sm" variant="outline" onClick={() => setPreviewRecord(record)}>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setManualPreviewId(record.id);
+                          onPreviewRecordHandled?.();
+                        }}
+                      >
                         <Eye className="mr-1 h-3.5 w-3.5" /> Preview
                       </Button>
                       <a href={record.fileUrl} download={record.fileName}>
@@ -120,7 +123,17 @@ export function ReportPreview({
         </div>
       )}
 
-      <Dialog open={Boolean(previewRecord)} onOpenChange={(open) => !open && setPreviewRecord(null)}>
+      <Dialog
+        open={Boolean(previewRecord)}
+        onOpenChange={(open) => {
+          if (open) return;
+          if (manualPreviewId) {
+            setManualPreviewId(null);
+            return;
+          }
+          onPreviewRecordHandled?.();
+        }}
+      >
         <DialogContent className="w-[min(96vw,72rem)] max-w-5xl p-4 sm:p-5">
           <DialogHeader>
             <DialogTitle>{previewRecord?.title ?? "Record Preview"}</DialogTitle>

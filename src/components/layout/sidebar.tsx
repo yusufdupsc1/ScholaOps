@@ -21,6 +21,7 @@ import {
   ChevronRight,
   ShieldCheck,
   GraduationCap,
+  UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -48,19 +49,37 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
   {
     label: "Overview",
     items: [
-      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+        icon: LayoutDashboard,
+        roles: ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "STAFF"],
+      },
+      { label: "Teacher Portal", href: "/dashboard/portal/teacher", icon: UserRound, roles: ["TEACHER"] },
+      { label: "Student Portal", href: "/dashboard/portal/student", icon: GraduationCap, roles: ["STUDENT"] },
+      { label: "Parent Portal", href: "/dashboard/portal/parent", icon: Users, roles: ["PARENT"] },
+      {
+        label: "Analytics",
+        href: "/dashboard/analytics",
+        icon: BarChart3,
+        roles: ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "STAFF"],
+      },
     ],
   },
   {
     label: "Academic",
     items: [
-      { label: "Students", href: "/dashboard/students", icon: GraduationCap },
-      { label: "Student Reports", href: "/dashboard/students/reports", icon: FileText },
-      { label: "Teachers", href: "/dashboard/teachers", icon: Users },
-      { label: "Classes", href: "/dashboard/classes", icon: BookOpen },
-      { label: "Attendance", href: "/dashboard/attendance", icon: ClipboardCheck },
-      { label: "Grades", href: "/dashboard/grades", icon: School },
+      { label: "Students", href: "/dashboard/students", icon: GraduationCap, roles: ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "STAFF"] },
+      {
+        label: "Student Reports",
+        href: "/dashboard/students/reports",
+        icon: FileText,
+        roles: ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "STAFF", "TEACHER"],
+      },
+      { label: "Teachers", href: "/dashboard/teachers", icon: Users, roles: ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "STAFF"] },
+      { label: "Classes", href: "/dashboard/classes", icon: BookOpen, roles: ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "STAFF"] },
+      { label: "Attendance", href: "/dashboard/attendance", icon: ClipboardCheck, roles: ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "STAFF", "TEACHER"] },
+      { label: "Grades", href: "/dashboard/grades", icon: School, roles: ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "STAFF", "TEACHER"] },
     ],
   },
   {
@@ -72,8 +91,8 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
         icon: CreditCard,
         roles: ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"],
       },
-      { label: "Events", href: "/dashboard/events", icon: Calendar },
-      { label: "Announcements", href: "/dashboard/announcements", icon: Bell },
+      { label: "Events", href: "/dashboard/events", icon: Calendar, roles: ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "STAFF", "TEACHER"] },
+      { label: "Announcements", href: "/dashboard/announcements", icon: Bell, roles: ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "STAFF", "TEACHER"] },
     ],
   },
   {

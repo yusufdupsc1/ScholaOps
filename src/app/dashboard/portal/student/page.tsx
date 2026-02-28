@@ -6,19 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { safeLoader } from "@/lib/server/safe-loader";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { FeePaymentActions } from "@/components/finance/fee-payment-actions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Student Portal" };
 export const dynamic = "force-dynamic";
 
-interface GradeWithSubject {
-  id: string;
-  score: number;
-  maxScore: number;
-  percentage: number;
-  letterGrade: string | null;
-  term: string;
-  subject: { name: string; code: string };
+interface PageProps {
+  searchParams: Promise<{ payment?: string; gateway?: string }>;
 }
 
 interface AttendanceSummary {
@@ -28,11 +23,14 @@ interface AttendanceSummary {
   total: number;
 }
 
-async function getStudentData(institutionId: string, userId: string) {
+async function getStudentData(institutionId: string, userEmail?: string | null) {
+  const normalizedEmail = userEmail?.trim().toLowerCase();
+  if (!normalizedEmail) return null;
+
   const student = await db.student.findFirst({
     where: {
       institutionId,
-      userId,
+      email: { equals: normalizedEmail, mode: "insensitive" },
     },
     include: {
       class: {
@@ -71,6 +69,9 @@ async function getStudentData(institutionId: string, userId: string) {
 
   const fees = await db.fee.findMany({
     where: { studentId: student.id },
+    include: {
+      payments: { select: { amount: true } },
+    },
     orderBy: { dueDate: "desc" },
     take: 10,
   });
@@ -94,13 +95,14 @@ async function getStudentData(institutionId: string, userId: string) {
   };
 }
 
-export default async function StudentPortalPage() {
+export default async function StudentPortalPage({ searchParams }: PageProps) {
+  const params = await searchParams;
   const session = await auth();
   const user = session?.user as
-    | { id?: string; institutionId?: string; role?: string }
+    | { institutionId?: string; role?: string; email?: string | null }
     | undefined;
 
-  if (!user?.id || !user?.institutionId) {
+  if (!user?.institutionId) {
     redirect("/auth/login");
   }
 
@@ -110,9 +112,9 @@ export default async function StudentPortalPage() {
 
   const data = await safeLoader(
     "DASHBOARD_STUDENT_PORTAL",
-    () => getStudentData(user.institutionId, user.id),
+    () => getStudentData(user.institutionId, user.email),
     null,
-    { institutionId: user.institutionId, userId: user.id },
+    { institutionId: user.institutionId, userEmail: user.email },
   );
 
   if (!data) {
@@ -139,11 +141,30 @@ export default async function StudentPortalPage() {
         )
       : 0;
 
-  const unpaidFees = fees.filter((f) => f.status === "UNPAID");
-  const totalUnpaid = unpaidFees.reduce((sum, f) => sum + Number(f.amount), 0);
+  const unpaidFees = fees.filter((f) => ["UNPAID", "PARTIAL", "OVERDUE"].includes(f.status));
+  const totalUnpaid = unpaidFees.reduce((sum, fee) => {
+    const paid = (fee.payments ?? []).reduce((paidSum: number, payment: any) => paidSum + Number(payment.amount), 0);
+    return sum + Math.max(0, Number(fee.amount) - paid);
+  }, 0);
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {params.payment ? (
+        <Card
+          className={
+            params.payment === "success"
+              ? "border-green-500/40 bg-green-500/5"
+              : "border-yellow-500/40 bg-yellow-500/5"
+          }
+        >
+          <CardContent className="py-3 text-sm">
+            {params.payment === "success"
+              ? `Payment received via ${params.gateway ?? "gateway"}.`
+              : `Payment ${params.payment}. You can try again.`}
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">Welcome back,</p>
         <h1 className="text-xl font-bold sm:text-2xl">
@@ -256,29 +277,34 @@ export default async function StudentPortalPage() {
             ) : (
               <div className="space-y-3">
                 {fees.slice(0, 5).map((fee) => (
-                  <div key={fee.id} className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-sm">{fee.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Due: {formatDate(fee.dueDate)}
-                      </p>
+                  <div key={fee.id} className="rounded-lg border border-border/70 p-3">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-sm">{fee.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Due: {formatDate(fee.dueDate)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <Badge
+                          variant={
+                            fee.status === "PAID"
+                              ? "default"
+                              : fee.status === "PARTIAL"
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
+                          {fee.status}
+                        </Badge>
+                        <p className="text-xs font-medium">
+                          {formatCurrency(Number(fee.amount))}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <Badge
-                        variant={
-                          fee.status === "PAID"
-                            ? "default"
-                            : fee.status === "PARTIAL"
-                              ? "secondary"
-                              : "destructive"
-                        }
-                      >
-                        {fee.status}
-                      </Badge>
-                      <p className="text-xs font-medium">
-                        {formatCurrency(Number(fee.amount))}
-                      </p>
-                    </div>
+                    {["UNPAID", "PARTIAL", "OVERDUE"].includes(fee.status) ? (
+                      <FeePaymentActions feeId={fee.id} />
+                    ) : null}
                   </div>
                 ))}
               </div>

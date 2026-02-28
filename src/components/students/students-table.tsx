@@ -188,6 +188,20 @@ export function StudentsTable({ students, classes, total, pages, currentPage }: 
         }
 
         toast.success("Student created");
+        const studentCredential = json?.data?.studentCredential;
+        const parentCredential = json?.data?.parentCredential;
+        if (studentCredential) {
+          toast.info(
+            `Student login: ${studentCredential.email} / ${studentCredential.password}`,
+            { duration: 12000 },
+          );
+        }
+        if (parentCredential) {
+          toast.info(
+            `Parent login: ${parentCredential.email} / ${parentCredential.password}`,
+            { duration: 12000 },
+          );
+        }
         setCreateOpen(false);
         resetCreateForm();
         router.refresh();

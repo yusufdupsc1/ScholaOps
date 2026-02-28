@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const LoginSchema = z.object({
+  institution: z.string().optional(),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(1, "Password is required"),
 });
@@ -51,7 +52,7 @@ export function LoginForm({ callbackUrl, error, googleEnabled = false }: LoginFo
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(LoginSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { institution: "", email: "", password: "" },
   });
 
   const onSubmit = (values: LoginFormValues) => {
@@ -59,6 +60,7 @@ export function LoginForm({ callbackUrl, error, googleEnabled = false }: LoginFo
 
     startTransition(async () => {
       const result = await signIn("credentials", {
+        institution: values.institution?.trim(),
         email: values.email,
         password: values.password,
         redirect: false,
@@ -99,6 +101,17 @@ export function LoginForm({ callbackUrl, error, googleEnabled = false }: LoginFo
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="institution">Institution Slug (optional)</Label>
+          <Input
+            id="institution"
+            type="text"
+            autoComplete="organization"
+            placeholder="e.g. greenfield-school"
+            disabled={isPending}
+            {...register("institution")}
+          />
+        </div>
         <div className="space-y-1.5">
           <Label htmlFor="email">Email address</Label>
           <Input

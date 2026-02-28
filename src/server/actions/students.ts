@@ -7,6 +7,10 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { asPlainArray, toIsoDate } from "@/lib/server/serializers";
+import {
+  provisionRoleUser,
+  type ProvisionedCredential,
+} from "@/server/services/user-provisioning";
 
 // ─── Schemas ───────────────────────────────
 const StudentSchema = z.object({
@@ -73,7 +77,14 @@ async function generateStudentId(institutionId: string): Promise<string> {
 // ─── CREATE ─────────────────────────────────
 export async function createStudent(
   formData: StudentFormData,
-): Promise<ActionResult<{ id: string; studentId: string }>> {
+): Promise<
+  ActionResult<{
+    id: string;
+    studentId: string;
+    studentCredential?: ProvisionedCredential | null;
+    parentCredential?: ProvisionedCredential | null;
+  }>
+> {
   try {
     const { institutionId, userId } = await getAuthContext();
     const parsed = StudentSchema.safeParse(formData);
@@ -93,6 +104,22 @@ export async function createStudent(
     const studentId = await generateStudentId(institutionId);
 
     const student = await db.$transaction(async (tx) => {
+      const studentName = `${data.firstName} ${data.lastName}`.trim();
+      let studentCredential: ProvisionedCredential | null = null;
+      let parentCredential: ProvisionedCredential | null = null;
+
+      if (data.email) {
+        const provisionedStudent = await provisionRoleUser({
+          tx,
+          institutionId,
+          role: "STUDENT",
+          email: data.email,
+          displayName: studentName,
+          passwordSeed: studentId,
+        });
+        studentCredential = provisionedStudent.credential;
+      }
+
       const s = await tx.student.create({
         data: {
           studentId,
@@ -112,6 +139,19 @@ export async function createStudent(
 
       // Create parent if provided
       if (data.parentFirstName && data.parentLastName) {
+        const parentName = `${data.parentFirstName} ${data.parentLastName}`.trim();
+        if (data.parentEmail) {
+          const provisionedParent = await provisionRoleUser({
+            tx,
+            institutionId,
+            role: "PARENT",
+            email: data.parentEmail,
+            displayName: parentName,
+            passwordSeed: `${studentId}-guardian`,
+          });
+          parentCredential = provisionedParent.credential;
+        }
+
         await tx.parent.create({
           data: {
             firstName: data.parentFirstName,
@@ -139,13 +179,22 @@ export async function createStudent(
         },
       });
 
-      return s;
+      return {
+        student: s,
+        studentCredential,
+        parentCredential,
+      };
     });
 
     revalidatePath("/dashboard/students");
     return {
       success: true,
-      data: { id: student.id, studentId: student.studentId },
+      data: {
+        id: student.student.id,
+        studentId: student.student.studentId,
+        studentCredential: student.studentCredential,
+        parentCredential: student.parentCredential,
+      },
     };
   } catch (error) {
     console.error("[CREATE_STUDENT]", error);

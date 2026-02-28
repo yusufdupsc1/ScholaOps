@@ -2,6 +2,11 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import type { NextRequest } from "next/server";
+import {
+  getDefaultDashboardPath,
+  roleAllowedDashboardPrefixes,
+  isPrivilegedRole,
+} from "@/lib/role-routing";
 
 const PUBLIC_ROUTES = [
   "/auth/login",
@@ -100,6 +105,11 @@ export default async function middleware(req: NextRequest) {
         tokenResolved: false,
       });
     }
+    if (pathname.startsWith("/dashboard")) {
+      const loginUrl = new URL("/auth/login", req.url);
+      loginUrl.searchParams.set("callbackUrl", encodeURIComponent(pathname));
+      return NextResponse.redirect(loginUrl);
+    }
     const response = NextResponse.next();
     response.headers.set("x-request-id", requestId);
     return response;
@@ -121,10 +131,22 @@ export default async function middleware(req: NextRequest) {
   // 4. RBAC Check
   const isAdminRoute = ADMIN_ROUTES.some((route) => pathname.startsWith(route));
   const userRole = token.role as string;
-  const isAdmin = ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"].includes(userRole);
+  const isAdmin = isPrivilegedRole(userRole);
 
   if (isAdminRoute && !isAdmin) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  if (pathname.startsWith("/dashboard")) {
+    const allowedPrefixes = roleAllowedDashboardPrefixes(userRole);
+    const isAllowed = allowedPrefixes.some((prefix) =>
+      pathname === prefix || pathname.startsWith(`${prefix}/`)
+    );
+    if (!isAllowed) {
+      return NextResponse.redirect(
+        new URL(getDefaultDashboardPath(userRole), req.url),
+      );
+    }
   }
 
   // 5. Success — Add context headers for Server Components

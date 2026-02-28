@@ -6,6 +6,10 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
+  provisionRoleUser,
+  type ProvisionedCredential,
+} from "@/server/services/user-provisioning";
+import {
   asPlainArray,
   toIsoDate,
   toNullableNumber,
@@ -71,7 +75,7 @@ async function generateTeacherId(institutionId: string): Promise<string> {
 
 export async function createTeacher(
   formData: TeacherFormData,
-): Promise<ActionResult<{ id: string; teacherId: string }>> {
+): Promise<ActionResult<{ id: string; teacherId: string; credential?: ProvisionedCredential | null }>> {
   try {
     const { institutionId, userId } = await getAuthContext();
     const parsed = TeacherSchema.safeParse(formData);
@@ -102,6 +106,16 @@ export async function createTeacher(
     }
 
     const teacher = await db.$transaction(async (tx) => {
+      const displayName = `${data.firstName} ${data.lastName}`.trim();
+      const provisioned = await provisionRoleUser({
+        tx,
+        institutionId,
+        role: "TEACHER",
+        email: data.email,
+        displayName,
+        passwordSeed: teacherId,
+      });
+
       const t = await tx.teacher.create({
         data: {
           teacherId,
@@ -120,6 +134,7 @@ export async function createTeacher(
             : new Date(),
           status: data.status || "ACTIVE",
           institutionId,
+          userId: provisioned.userId,
         },
       });
 
@@ -147,13 +162,20 @@ export async function createTeacher(
         },
       });
 
-      return t;
+      return {
+        teacher: t,
+        credential: provisioned.credential,
+      };
     });
 
     revalidatePath("/dashboard/teachers");
     return {
       success: true,
-      data: { id: teacher.id, teacherId: teacher.teacherId },
+      data: {
+        id: teacher.teacher.id,
+        teacherId: teacher.teacher.teacherId,
+        credential: teacher.credential,
+      },
     };
   } catch (error) {
     console.error("[CREATE_TEACHER]", error);

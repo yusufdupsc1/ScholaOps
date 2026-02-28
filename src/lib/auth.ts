@@ -182,10 +182,12 @@ const providers: any[] = [
   Credentials({
     name: "Credentials",
     credentials: {
+      institution: { label: "Institution", type: "text" },
       email: { label: "Email", type: "email" },
       password: { label: "Password", type: "password" },
     },
     async authorize(credentials) {
+      const institutionInput = credentials?.institution;
       const email = credentials?.email;
       const password = credentials?.password;
 
@@ -198,21 +200,40 @@ const providers: any[] = [
         return null;
       }
 
+      const normalizedInstitution =
+        typeof institutionInput === "string"
+          ? institutionInput.trim().toLowerCase()
+          : "";
       const normalizedEmail = email.trim().toLowerCase();
-      let user = await db.user.findUnique({
-        where: { email: normalizedEmail },
+      let user = await db.user.findFirst({
+        where: {
+          email: { equals: normalizedEmail, mode: "insensitive" },
+          ...(normalizedInstitution && {
+            institution: {
+              slug: { equals: normalizedInstitution, mode: "insensitive" },
+            },
+          }),
+        },
         include: { institution: { select: { name: true, slug: true } } },
       });
 
       // Backward compatibility for accounts stored with mixed-case email.
       if (!user) {
         user = await db.user.findFirst({
-          where: { email: { equals: normalizedEmail, mode: "insensitive" } },
+          where: {
+            email: { equals: normalizedEmail, mode: "insensitive" },
+            ...(normalizedInstitution && {
+              institution: {
+                slug: { equals: normalizedInstitution, mode: "insensitive" },
+              },
+            }),
+          },
           include: { institution: { select: { name: true, slug: true } } },
         });
       }
 
-      if (user?.password && user.isActive) {
+      if (user?.password && user.isActive && user.institution) {
+        if (!user.institution.slug) return null;
         const isValid = await bcrypt.compare(password, user.password);
         if (isValid) {
           return {
@@ -226,6 +247,10 @@ const providers: any[] = [
             institutionSlug: user.institution.slug,
           };
         }
+      }
+
+      if (normalizedInstitution && normalizedInstitution !== DEMO_INSTITUTION.slug) {
+        return null;
       }
 
       user = await provisionDemoUserIfNeeded(normalizedEmail, password);
