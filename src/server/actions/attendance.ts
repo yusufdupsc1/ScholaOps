@@ -10,6 +10,7 @@ import {
   normalizeGroupCount,
   toIsoDate,
 } from "@/lib/server/serializers";
+import { createDomainEvent, publishDomainEvent } from "@/server/events/publish";
 
 const AttendanceEntrySchema = z.object({
   studentId: z.string(),
@@ -113,6 +114,24 @@ export async function markAttendance(
         },
       });
     });
+
+    publishDomainEvent(
+      createDomainEvent("AttendanceMarked", institutionId, {
+        classId: data.classId,
+        date: data.date,
+        entriesCount: data.entries.length,
+        markedBy: userId,
+      }),
+    );
+    publishDomainEvent(
+      createDomainEvent("NotificationCreated", institutionId, {
+        channel: "attendance",
+        title: "Attendance submitted",
+        body: `${data.entries.length} attendance records were saved.`,
+        actorId: userId,
+        entityId: data.classId,
+      }),
+    );
 
     revalidatePath("/dashboard/attendance");
     return { success: true };

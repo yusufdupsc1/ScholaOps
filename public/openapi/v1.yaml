@@ -1,0 +1,89 @@
+openapi: 3.1.0
+info:
+  title: scholaOps API
+  version: v1
+  description: Versioned REST API for scholaOps integrations and mobile clients.
+servers:
+  - url: /api/v1
+paths:
+  /students:
+    get:
+      summary: List students
+    post:
+      summary: Create student
+  /teachers:
+    get:
+      summary: List teachers
+    post:
+      summary: Create teacher
+  /classes:
+    get:
+      summary: List classes
+    post:
+      summary: Create class
+  /attendance:
+    get:
+      summary: Attendance summary/trend/class data
+    post:
+      summary: Mark attendance
+  /grades:
+    get:
+      summary: List grades
+    post:
+      summary: Create grade
+  /finance:
+    get:
+      summary: Fee list or finance summary
+    post:
+      summary: Create fee or record payment
+  /events:
+    get:
+      summary: List events
+    post:
+      summary: Create event
+  /announcements:
+    get:
+      summary: List announcements
+    post:
+      summary: Create announcement
+  /settings:
+    get:
+      summary: Get institution settings/profile
+    post:
+      summary: Update institution profile/settings
+  /realtime/attendance:
+    get:
+      summary: Attendance event stream (SSE or polling)
+  /realtime/announcements:
+    get:
+      summary: Announcement event stream (SSE or polling)
+  /realtime/notifications:
+    get:
+      summary: Notification event stream (SSE or polling)
+  /security/2fa:
+    get:
+      summary: Fetch 2FA setup state
+    post:
+      summary: Enable/disable TOTP 2FA
+  /push/subscribe:
+    post:
+      summary: Register web push subscription
+components:
+  schemas:
+    ApiEnvelope:
+      type: object
+      properties:
+        data:
+          nullable: true
+        meta:
+          type: object
+          additionalProperties: true
+        error:
+          type: object
+          nullable: true
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details: {}

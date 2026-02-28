@@ -6,6 +6,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { asPlainArray, toIsoDate } from "@/lib/server/serializers";
+import { createDomainEvent, publishDomainEvent } from "@/server/events/publish";
 
 const AnnouncementSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -92,6 +93,24 @@ export async function createAnnouncement(
 
       return a;
     });
+
+    publishDomainEvent(
+      createDomainEvent("AnnouncementPublished", institutionId, {
+        announcementId: announcement.id,
+        title: announcement.title,
+        priority: announcement.priority,
+        publishedBy: userId,
+      }),
+    );
+    publishDomainEvent(
+      createDomainEvent("NotificationCreated", institutionId, {
+        channel: "announcement",
+        title: "Announcement published",
+        body: announcement.title,
+        actorId: userId,
+        entityId: announcement.id,
+      }),
+    );
 
     revalidatePath("/dashboard/announcements");
     return { success: true, data: { id: announcement.id } };

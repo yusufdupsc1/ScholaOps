@@ -2,6 +2,8 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "@/styles/globals.css";
+import { OfflineBanner } from "@/components/pwa/offline-banner";
+import { ServiceWorkerRegistration } from "@/components/pwa/sw-register";
 
 const geistSans = localFont({
   src: "../assets/fonts/GeistLike-Regular.ttf",
@@ -17,7 +19,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://scholaops1.vercel.app",
+    process.env.NEXT_PUBLIC_APP_URL || "https://app.scholaops.com",
   ),
   title: {
     default: "scholaOps — Precision School Management",
@@ -72,7 +74,11 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <ServiceWorkerRegistration />
+        <OfflineBanner />
+        {children}
+      </body>
     </html>
   );
 }

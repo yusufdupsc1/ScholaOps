@@ -27,7 +27,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "analyze": "ANALYZE=true next build",
-    "lhci": "pnpm dlx @lhci/cli autorun --config=./.lighthouserc.cjs"
+    "lhci": "pnpm dlx @lhci/cli autorun --config=./.lighthouserc.cjs",
+    "openapi:check": "node scripts/check-openapi.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

@@ -36,6 +36,7 @@ const SESSION_COOKIE_CANDIDATES = [
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const requestId = req.headers.get("x-request-id") ?? crypto.randomUUID();
 
   // 1. Allow static files and Next.js internals
   if (
@@ -50,7 +51,9 @@ export default async function middleware(req: NextRequest) {
   // 2. Allow public routes
   const isPublic = PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
   if (isPublic) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    response.headers.set("x-request-id", requestId);
+    return response;
   }
 
   // 3. Get session token (Edge-compatible)
@@ -90,18 +93,22 @@ export default async function middleware(req: NextRequest) {
     if (AUTH_DEBUG) {
       console.log("[auth-debug] middleware skip (no token)", {
         pathname,
+        requestId,
         hasAuthSecret: AUTH_SECRETS.length > 0,
         isSecureCookie,
         presentCookies,
         tokenResolved: false,
       });
     }
-    return NextResponse.next();
+    const response = NextResponse.next();
+    response.headers.set("x-request-id", requestId);
+    return response;
   }
 
   if (AUTH_DEBUG) {
     console.log("[auth-debug] middleware pass", {
       pathname,
+      requestId,
       hasAuthSecret: AUTH_SECRETS.length > 0,
       isSecureCookie,
       presentCookies,
@@ -123,6 +130,7 @@ export default async function middleware(req: NextRequest) {
   // 5. Success — Add context headers for Server Components
   const response = NextResponse.next();
 
+  response.headers.set("x-request-id", requestId);
   if (token.sub) response.headers.set("x-user-id", token.sub);
   if (userRole) response.headers.set("x-user-role", userRole);
   if (token.institutionId) {

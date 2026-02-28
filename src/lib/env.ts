@@ -16,6 +16,14 @@ const envSchema = z.object({
   // App
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+  ENABLE_AI_ASSIST: z
+    .union([z.literal("true"), z.literal("false")])
+    .default("false")
+    .transform((value) => value === "true"),
+  REALTIME_PROVIDER: z.enum(["sse", "polling"]).default("sse"),
+  PUSH_VAPID_PUBLIC_KEY: z.string().optional(),
+  PUSH_VAPID_PRIVATE_KEY: z.string().optional(),
+  PUSH_VAPID_SUBJECT: z.string().optional(),
 
   // Email (Resend)
   RESEND_API_KEY: z.string().optional(),

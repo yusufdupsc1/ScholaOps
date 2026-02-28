@@ -125,6 +125,8 @@ Full runbook: [Deployment Guide](./docs/DEPLOYMENT.md).
 Representative routes:
 
 - `GET /api/health` (app + DB health)
+- `GET /api/v1/students` (versioned REST API)
+- `GET /api/v1/realtime/notifications` (SSE/polling notifications stream)
 - `POST /api/auth/[...nextauth]` (Auth.js handlers)
 - `GET/POST /api/uploadthing` (file uploads)
 - `POST /api/webhooks/stripe` (payment webhooks)
@@ -150,6 +152,7 @@ tests/            # Unit, integration, and e2e suites
 
 - [Architecture](./docs/ARCHITECTURE.md)
 - [Deployment](./docs/DEPLOYMENT.md)
+- [Operations Runbook](./docs/OPERATIONS.md)
 - [Security Policy](./SECURITY.md)
 - [Contributing](./CONTRIBUTING.md)
 

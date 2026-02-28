@@ -16,6 +16,8 @@ type FinanceSummary = {
     overdueCount: number;
 };
 type StatGroup = { status: string; _count: number }[];
+type AttendanceAnomaly = { date: string; count: number; average: number };
+type AiSummary = { enabled: boolean; text: string };
 
 interface Props {
     attendanceSummary: AttendanceSummary;
@@ -24,6 +26,8 @@ interface Props {
     financeSummary: FinanceSummary;
     studentStats: StatGroup;
     teacherStats: StatGroup;
+    attendanceAnomalies: AttendanceAnomaly[];
+    aiSummary: AiSummary;
 }
 
 const GRADE_COLORS: Record<string, string> = {
@@ -38,6 +42,7 @@ const ATTENDANCE_COLORS: Record<string, string> = {
 export function AnalyticsClient({
     attendanceSummary, attendanceTrend, gradeDistribution,
     financeSummary, studentStats, teacherStats,
+    attendanceAnomalies, aiSummary,
 }: Props) {
 
     // Transform attendance trend into date-grouped chart data
@@ -84,6 +89,20 @@ export function AnalyticsClient({
                         <p className={`text-lg font-bold sm:text-xl ${color}`}>{value}</p>
                     </div>
                 ))}
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+                <h2 className="font-semibold text-sm mb-2">Assistive Insights</h2>
+                <p className="text-sm text-muted-foreground">{aiSummary.text}</p>
+                {attendanceAnomalies.length > 0 ? (
+                    <ul className="mt-3 space-y-2">
+                        {attendanceAnomalies.map((anomaly) => (
+                            <li key={anomaly.date} className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-foreground">
+                                Attendance dip on {format(new Date(anomaly.date), "MMM d")}: {anomaly.count} present vs {anomaly.average} average.
+                            </li>
+                        ))}
+                    </ul>
+                ) : null}
             </div>
 
             {/* Attendance Trend */}

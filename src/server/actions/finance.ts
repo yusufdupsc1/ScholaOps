@@ -11,6 +11,7 @@ import {
   toIsoDate,
   toNumber,
 } from "@/lib/server/serializers";
+import { createDomainEvent, publishDomainEvent } from "@/server/events/publish";
 
 const FeeSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -239,6 +240,16 @@ export async function recordPayment(
 
       return p;
     });
+
+    publishDomainEvent(
+      createDomainEvent("NotificationCreated", institutionId, {
+        channel: "finance",
+        title: "Payment recorded",
+        body: `Receipt ${receiptNumber} was recorded.`,
+        actorId: userId,
+        entityId: payment.id,
+      }),
+    );
 
     revalidatePath("/dashboard/finance");
     return { success: true, data: { id: payment.id, receiptNumber } };
