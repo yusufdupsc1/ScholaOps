@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { getGrades, getGradeDistribution } from "@/server/actions/grades";
 import { getSubjects } from "@/server/actions/classes";
+import { getStudents } from "@/server/actions/students";
 import { GradesClient } from "@/components/grades/grades-client";
 import { TableSkeleton } from "@/components/ui/skeletons";
 import { safeLoader } from "@/lib/server/safe-loader";
@@ -38,6 +39,12 @@ export default async function GradesPage({ searchParams }: PageProps) {
     [],
     { institutionId },
   );
+  const studentsData = await safeLoader(
+    "DASHBOARD_GRADES_STUDENTS",
+    () => getStudents({ page: 1, limit: 200, status: "ACTIVE" }),
+    { students: [], total: 0, pages: 1, page: 1 },
+    { institutionId },
+  );
   const distribution = await safeLoader(
     "DASHBOARD_GRADES_DISTRIBUTION",
     () => getGradeDistribution(),
@@ -45,11 +52,20 @@ export default async function GradesPage({ searchParams }: PageProps) {
     { institutionId },
   );
 
+  const studentOptions = studentsData.students.map((student) => ({
+    id: student.id,
+    firstName: student.firstName,
+    lastName: student.lastName,
+    studentId: student.studentId,
+    class: student.class ? { name: student.class.name } : null,
+  }));
+
   return (
     <div className="space-y-6 animate-fade-in">
       <Suspense fallback={<TableSkeleton />}>
         <GradesClient
           grades={data.grades}
+          students={studentOptions}
           subjects={subjects}
           distribution={distribution}
           total={data.total}

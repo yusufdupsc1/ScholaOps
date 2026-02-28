@@ -16,16 +16,23 @@ import { createGrade, updateGrade, deleteGrade, type GradeFormData } from "@/ser
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
 
 type Subject = { id: string; name: string; code: string };
+type StudentOption = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    studentId: string;
+    class: { name: string } | null;
+};
 type Grade = {
     id: string; score: number; maxScore: number; percentage: number;
     letterGrade: string | null; term: string; remarks: string | null;
-    student: { firstName: string; lastName: string; studentId: string; class: { name: string } | null };
-    subject: { name: string; code: string };
+    student: { id: string; firstName: string; lastName: string; studentId: string; class: { name: string } | null };
+    subject: { id: string; name: string; code: string };
 };
 type Distribution = { letterGrade: string | null; _count: number }[];
 
 interface Props {
-    grades: Grade[]; subjects: Subject[]; distribution: Distribution;
+    grades: Grade[]; students: StudentOption[]; subjects: Subject[]; distribution: Distribution;
     total: number; pages: number; currentPage: number;
 }
 
@@ -36,11 +43,21 @@ const GRADE_COLORS: Record<string, string> = {
 
 const CURRENT_TERMS = ["Term 1 2025", "Term 2 2025", "Term 3 2025", "Term 1 2026"];
 
-function GradeForm({ initial, subjects, onSuccess }: { initial?: Grade; subjects: Subject[]; onSuccess: () => void }) {
+function GradeForm({
+    initial,
+    students,
+    subjects,
+    onSuccess,
+}: {
+    initial?: Grade;
+    students: StudentOption[];
+    subjects: Subject[];
+    onSuccess: () => void;
+}) {
     const [pending, startTransition] = useTransition();
     const [form, setForm] = useState<GradeFormData>({
-        studentId: initial?.student.studentId ?? "",
-        subjectId: initial?.subject.code ?? "",
+        studentId: initial?.student.id ?? "",
+        subjectId: initial?.subject.id ?? "",
         score: initial?.score ?? 0,
         maxScore: initial?.maxScore ?? 100,
         term: initial?.term ?? CURRENT_TERMS[0],
@@ -63,8 +80,19 @@ function GradeForm({ initial, subjects, onSuccess }: { initial?: Grade; subjects
         <form onSubmit={handleSubmit} className="space-y-4">
             {!initial && (
                 <div className="space-y-1.5">
-                    <Label htmlFor="gr-sid">Student ID *</Label>
-                    <Input id="gr-sid" value={form.studentId} onChange={e => set("studentId", e.target.value)} placeholder="e.g. STU-2024-0001" required />
+                    <Label>Student *</Label>
+                    <Select value={form.studentId} onValueChange={v => set("studentId", v)} required>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select student" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {students.map((student) => (
+                                <SelectItem key={student.id} value={student.id}>
+                                    {student.firstName} {student.lastName} ({student.studentId})
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             )}
             <div className="space-y-1.5">
@@ -112,7 +140,7 @@ function GradeForm({ initial, subjects, onSuccess }: { initial?: Grade; subjects
     );
 }
 
-export function GradesClient({ grades, subjects, distribution, total, pages, currentPage }: Props) {
+export function GradesClient({ grades, students, subjects, distribution, total, pages, currentPage }: Props) {
     const [open, setOpen] = useState(false);
     const [editGrade, setEditGrade] = useState<Grade | null>(null);
     const [, startTransition] = useTransition();
@@ -143,7 +171,12 @@ export function GradesClient({ grades, subjects, distribution, total, pages, cur
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader><DialogTitle>{editGrade ? "Edit Grade" : "Record Grade"}</DialogTitle></DialogHeader>
-                        <GradeForm initial={editGrade ?? undefined} subjects={subjects} onSuccess={() => setOpen(false)} />
+                        <GradeForm
+                            initial={editGrade ?? undefined}
+                            students={students}
+                            subjects={subjects}
+                            onSuccess={() => setOpen(false)}
+                        />
                     </DialogContent>
                 </Dialog>
             </PageHeader>

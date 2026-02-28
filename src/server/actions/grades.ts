@@ -267,13 +267,14 @@ export async function getGrades({
       include: {
         student: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
             studentId: true,
             class: { select: { name: true } },
           },
         },
-        subject: { select: { name: true, code: true } },
+        subject: { select: { id: true, name: true, code: true } },
       },
       orderBy: [{ term: "desc" }, { createdAt: "desc" }],
       skip: (page - 1) * limit,
@@ -292,12 +293,17 @@ export async function getGrades({
       term: grade.term,
       remarks: grade.remarks,
       student: {
+        id: grade.student.id,
         firstName: grade.student.firstName,
         lastName: grade.student.lastName,
         studentId: grade.student.studentId,
         class: grade.student.class ? { name: grade.student.class.name } : null,
       },
-      subject: { name: grade.subject.name, code: grade.subject.code },
+      subject: {
+        id: grade.subject.id,
+        name: grade.subject.name,
+        code: grade.subject.code,
+      },
     })),
     total,
     pages: Math.max(1, Math.ceil(total / limit)),
