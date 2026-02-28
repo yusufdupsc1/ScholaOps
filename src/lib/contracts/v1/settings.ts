@@ -20,6 +20,12 @@ export const InstitutionSettingsSchema = z.object({
   smsNotifs: z.boolean().default(false),
   lateFeePercent: z.coerce.number().min(0).max(100).default(0),
   gracePeriodDays: z.coerce.number().min(0).max(365).default(7),
+  signatoryName: z.string().optional(),
+  signatoryTitle: z.string().optional(),
+  coSignatoryName: z.string().optional(),
+  coSignatoryTitle: z.string().optional(),
+  certificateFooter: z.string().optional(),
+  certificateLogoUrl: z.string().url().optional().or(z.literal("")),
 });
 
 export type InstitutionProfileInput = z.infer<typeof InstitutionProfileSchema>;

@@ -14,6 +14,12 @@ const InstitutionSettingsSchema = z.object({
   smsNotifs: z.boolean().default(false),
   lateFeePercent: z.coerce.number().min(0).max(100).default(0),
   gracePeriodDays: z.coerce.number().min(0).max(365).default(7),
+  signatoryName: z.string().optional(),
+  signatoryTitle: z.string().optional(),
+  coSignatoryName: z.string().optional(),
+  coSignatoryTitle: z.string().optional(),
+  certificateFooter: z.string().optional(),
+  certificateLogoUrl: z.string().url().optional().or(z.literal("")),
 });
 
 const InstitutionProfileSchema = z.object({
@@ -181,6 +187,12 @@ export async function updateInstitutionSettings(
           smsNotifs: data.smsNotifs,
           lateFeePercent: data.lateFeePercent,
           gracePeriodDays: data.gracePeriodDays,
+          signatoryName: data.signatoryName || null,
+          signatoryTitle: data.signatoryTitle || null,
+          coSignatoryName: data.coSignatoryName || null,
+          coSignatoryTitle: data.coSignatoryTitle || null,
+          certificateFooter: data.certificateFooter || null,
+          certificateLogoUrl: data.certificateLogoUrl || null,
         },
         update: {
           academicYear: data.academicYear,
@@ -190,6 +202,12 @@ export async function updateInstitutionSettings(
           smsNotifs: data.smsNotifs,
           lateFeePercent: data.lateFeePercent,
           gracePeriodDays: data.gracePeriodDays,
+          signatoryName: data.signatoryName || null,
+          signatoryTitle: data.signatoryTitle || null,
+          coSignatoryName: data.coSignatoryName || null,
+          coSignatoryTitle: data.coSignatoryTitle || null,
+          certificateFooter: data.certificateFooter || null,
+          certificateLogoUrl: data.certificateLogoUrl || null,
         },
       });
 

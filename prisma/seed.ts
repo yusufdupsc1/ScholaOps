@@ -1,6 +1,21 @@
 // prisma/seed.ts
 import { config as loadEnv } from "dotenv";
-import { PrismaClient, Role, Plan, Gender, StudentStatus, EmployeeStatus, AttendanceStatus, FeeType, FeeStatus } from "@prisma/client";
+import {
+  PrismaClient,
+  Role,
+  Plan,
+  Gender,
+  StudentStatus,
+  EmployeeStatus,
+  AttendanceStatus,
+  FeeType,
+  FeeStatus,
+  EventType,
+  Priority,
+  RecordPeriodType,
+  RecordSource,
+  StudentRecordType,
+} from "@prisma/client";
 import bcryptjs from "bcryptjs";
 
 // Keep seed behavior deterministic across shells:
@@ -10,8 +25,29 @@ loadEnv({ path: ".env.local", override: true });
 
 const db = new PrismaClient();
 
+function makeSeedPdfDataUri(title: string, studentName: string) {
+  const text = [
+    "%PDF-1.1",
+    "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
+    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
+    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R >> endobj",
+    "4 0 obj << /Length 55 >> stream",
+    `BT /F1 12 Tf 20 160 Td (${title} - ${studentName}) Tj ET`,
+    "endstream endobj",
+    "xref 0 5",
+    "0000000000 65535 f ",
+    "trailer << /Root 1 0 R /Size 5 >>",
+    "startxref",
+    "9",
+    "%%EOF",
+  ].join("\n");
+  return `data:application/pdf;base64,${Buffer.from(text, "utf8").toString("base64")}`;
+}
+
 async function main() {
   console.log("🌱 Seeding scholaOps database...\n");
+  const enableDemoPlaceholders =
+    (process.env.ENABLE_DEMO_PLACEHOLDERS ?? "false") === "true";
 
   // ── Institution ──────────────────────────────
   const institution = await db.institution.upsert({
@@ -41,6 +77,11 @@ async function main() {
       academicYear: "2024-2025",
       termsPerYear: 3,
       emailNotifs: true,
+      signatoryName: "Md. Abdul Karim",
+      signatoryTitle: "Principal",
+      coSignatoryName: "Ayesha Sultana",
+      coSignatoryTitle: "Class Teacher",
+      certificateFooter: "Issued by scholaOps Academy, Dhaka",
     },
   });
 
@@ -91,13 +132,12 @@ async function main() {
 
   // ── Subjects ─────────────────────────────────
   const subjectData = [
-    { name: "Mathematics", code: "MATH", isCore: true },
-    { name: "English Language", code: "ENG", isCore: true },
-    { name: "Science", code: "SCI", isCore: true },
-    { name: "Social Studies", code: "SS", isCore: true },
-    { name: "Computer Science", code: "CS", isCore: false },
-    { name: "Physical Education", code: "PE", isCore: false },
-    { name: "Art & Design", code: "ART", isCore: false },
+    { name: "Bangla", code: "BAN", isCore: true },
+    { name: "English", code: "ENG", isCore: true },
+    { name: "Mathematics", code: "MTH", isCore: true },
+    { name: "General Science", code: "GSC", isCore: true },
+    { name: "Bangladesh and Global Studies", code: "BGS", isCore: true },
+    { name: "Religion", code: "REL", isCore: true },
   ];
 
   const subjects = [];
@@ -113,12 +153,12 @@ async function main() {
 
   // ── Classes ──────────────────────────────────
   const classData = [
-    { name: "Grade 9A", grade: "9", section: "A" },
-    { name: "Grade 9B", grade: "9", section: "B" },
-    { name: "Grade 10A", grade: "10", section: "A" },
-    { name: "Grade 10B", grade: "10", section: "B" },
-    { name: "Grade 11A", grade: "11", section: "A" },
-    { name: "Grade 12A", grade: "12", section: "A" },
+    { name: "Pre-Primary", grade: "PP", section: "A" },
+    { name: "Class One", grade: "1", section: "A" },
+    { name: "Class Two", grade: "2", section: "A" },
+    { name: "Class Three", grade: "3", section: "A" },
+    { name: "Class Four", grade: "4", section: "A" },
+    { name: "Class Five", grade: "5", section: "A" },
   ];
 
   const classes = [];
@@ -146,10 +186,12 @@ async function main() {
 
   // ── Teachers ─────────────────────────────────
   const teacherData = [
-    { firstName: "James", lastName: "Wilson", email: "j.wilson@school.edu", specialization: "Mathematics" },
-    { firstName: "Maria", lastName: "Rodriguez", email: "m.rodriguez@school.edu", specialization: "Science" },
-    { firstName: "David", lastName: "Kim", email: "d.kim@school.edu", specialization: "Computer Science" },
-    { firstName: "Emily", lastName: "Thompson", email: "e.thompson@school.edu", specialization: "English" },
+    { firstName: "Fahim", lastName: "Hasan", email: "fahim.hasan@school.edu", specialization: "Mathematics" },
+    { firstName: "Nusrat", lastName: "Jahan", email: "nusrat.jahan@school.edu", specialization: "General Science" },
+    { firstName: "Rakib", lastName: "Hossain", email: "rakib.hossain@school.edu", specialization: "Bangla" },
+    { firstName: "Sharmin", lastName: "Akter", email: "sharmin.akter@school.edu", specialization: "English" },
+    { firstName: "Mahmud", lastName: "Rahman", email: "mahmud.rahman@school.edu", specialization: "Bangladesh and Global Studies" },
+    { firstName: "Tanjina", lastName: "Sultana", email: "tanjina.sultana@school.edu", specialization: "Religion" },
   ];
 
   const teachers = [];
@@ -166,7 +208,7 @@ async function main() {
       create: {
         ...t,
         teacherId: `TCH-2024-${String(i + 1).padStart(3, "0")}`,
-        gender: Gender.MALE,
+        gender: i % 2 === 0 ? Gender.MALE : Gender.FEMALE,
         salary: 55000 + i * 5000,
         status: EmployeeStatus.ACTIVE,
         institutionId: institution.id,
@@ -177,10 +219,38 @@ async function main() {
   console.log(`✅ Teachers: ${teachers.length}`);
 
   // ── Students ─────────────────────────────────
-  const firstNames = ["Emma", "Liam", "Olivia", "Noah", "Ava", "William", "Sophia", "James",
-    "Isabella", "Oliver", "Mia", "Elijah", "Charlotte", "Lucas", "Amelia"];
-  const lastNames = ["Johnson", "Smith", "Williams", "Brown", "Jones", "Garcia",
-    "Miller", "Davis", "Martinez", "Hernandez"];
+  const firstNames = [
+    "Ayaan",
+    "Arisha",
+    "Tanvir",
+    "Mahi",
+    "Nabil",
+    "Sadia",
+    "Rafi",
+    "Nafisa",
+    "Samiha",
+    "Tahmid",
+    "Farhan",
+    "Mehjabin",
+    "Raiyan",
+    "Tasnim",
+    "Adnan",
+    "Mim",
+    "Sajid",
+    "Anika",
+  ];
+  const lastNames = [
+    "Rahman",
+    "Ahmed",
+    "Hossain",
+    "Islam",
+    "Karim",
+    "Khan",
+    "Chowdhury",
+    "Sarker",
+    "Akter",
+    "Begum",
+  ];
 
   let studentCount = 0;
   for (let c = 0; c < classes.length; c++) {
@@ -247,6 +317,36 @@ async function main() {
   }
   console.log(`✅ Attendance records seeded`);
 
+  // ── Grades ───────────────────────────────────
+  for (const student of students) {
+    for (const subject of subjects) {
+      const score = Math.floor(55 + Math.random() * 45);
+      await db.grade.create({
+        data: {
+          institutionId: institution.id,
+          studentId: student.id,
+          subjectId: subject.id,
+          score,
+          maxScore: 100,
+          percentage: score,
+          letterGrade:
+            score >= 80
+              ? "A+"
+              : score >= 70
+                ? "A"
+                : score >= 60
+                  ? "A-"
+                  : score >= 50
+                    ? "B"
+                    : "C",
+          term: "Term 1 2025",
+          remarks: score >= 60 ? "Good progress" : "Needs improvement",
+        },
+      });
+    }
+  }
+  console.log(`✅ Grades seeded for ${students.length} students`);
+
   // ── Fees ─────────────────────────────────────
   const allStudents = await db.student.findMany({
     where: { institutionId: institution.id },
@@ -276,15 +376,15 @@ async function main() {
 
   // ── Events ───────────────────────────────────
   const events = [
-    { title: "Annual Sports Day", startDate: new Date("2025-03-15"), type: "SPORTS" },
-    { title: "Science Fair 2025", startDate: new Date("2025-04-10"), type: "ACADEMIC" },
-    { title: "Parent-Teacher Conference", startDate: new Date("2025-02-28"), type: "GENERAL" },
-    { title: "Mid-Term Examinations", startDate: new Date("2025-03-03"), type: "EXAM" },
+    { title: "Annual Sports Day", startDate: new Date("2025-03-15"), type: EventType.SPORTS },
+    { title: "Science Fair 2025", startDate: new Date("2025-04-10"), type: EventType.ACADEMIC },
+    { title: "Parent-Teacher Conference", startDate: new Date("2025-02-28"), type: EventType.GENERAL },
+    { title: "Mid-Term Examinations", startDate: new Date("2025-03-03"), type: EventType.EXAM },
   ];
 
   for (const e of events) {
     await db.event.create({
-      data: { ...e, type: e.type as any, institutionId: institution.id },
+      data: { ...e, institutionId: institution.id },
     });
   }
   console.log(`✅ Events: ${events.length}`);
@@ -295,12 +395,82 @@ async function main() {
       title: "Welcome to Academic Year 2024-2025",
       content:
         "We are excited to welcome all students and staff to another great academic year. Please review the updated school policies available in the student portal.",
-      priority: "HIGH",
+      priority: Priority.HIGH,
       targetAudience: ["ALL"],
       institutionId: institution.id,
     },
   });
   console.log(`✅ Announcements seeded`);
+
+  // ── Demo placeholders: progress + certificates ──
+  if (institution.slug === "scholaops-demo" && enableDemoPlaceholders) {
+    const demoStudents = await db.student.findMany({
+      where: { institutionId: institution.id, status: StudentStatus.ACTIVE },
+      include: { class: true },
+      take: 18,
+    });
+
+    const bundles: Array<{
+      recordType: StudentRecordType;
+      periodType: RecordPeriodType;
+      periodLabel: string;
+      title: string;
+    }> = [
+      { recordType: StudentRecordType.ID_CARD, periodType: RecordPeriodType.CUSTOM, periodLabel: "Identity", title: "ID Card" },
+      { recordType: StudentRecordType.RESULT_SHEET, periodType: RecordPeriodType.MONTHLY, periodLabel: "2026-01", title: "Result Sheet Report" },
+      { recordType: StudentRecordType.ATTENDANCE_RECORD, periodType: RecordPeriodType.WEEKLY, periodLabel: "2026-W08", title: "Attendance Record" },
+      { recordType: StudentRecordType.BEHAVIOR_TRACKING, periodType: RecordPeriodType.QUARTERLY, periodLabel: "2026-Q1", title: "Behavior Tracking Report" },
+      { recordType: StudentRecordType.FINAL_EXAM_CERTIFICATE, periodType: RecordPeriodType.ANNUAL, periodLabel: "2025", title: "Final Exam Certificate" },
+      { recordType: StudentRecordType.CHARACTER_CERTIFICATE, periodType: RecordPeriodType.ANNUAL, periodLabel: "2025", title: "Character Certificate" },
+      { recordType: StudentRecordType.EXTRA_SKILLS_CERTIFICATE, periodType: RecordPeriodType.QUARTERLY, periodLabel: "2026-Q1", title: "Extra Skills Certificate" },
+      { recordType: StudentRecordType.TRANSFER_CERTIFICATE, periodType: RecordPeriodType.CUSTOM, periodLabel: "Transfer", title: "Transfer Certificate" },
+      { recordType: StudentRecordType.WEEKLY_PROGRESS, periodType: RecordPeriodType.WEEKLY, periodLabel: "2026-W08", title: "Weekly Progress Record" },
+      { recordType: StudentRecordType.MONTHLY_PROGRESS, periodType: RecordPeriodType.MONTHLY, periodLabel: "2026-01", title: "Monthly Progress Record" },
+      { recordType: StudentRecordType.QUARTERLY_PROGRESS, periodType: RecordPeriodType.QUARTERLY, periodLabel: "2026-Q1", title: "Quarterly Progress Record" },
+      { recordType: StudentRecordType.ANNUAL_FINAL_REPORT, periodType: RecordPeriodType.ANNUAL, periodLabel: "2025", title: "Annual Final Progress Report" },
+    ];
+
+    for (const student of demoStudents) {
+      for (const item of bundles) {
+        const fileName = `${student.studentId}-${item.recordType}-${item.periodLabel}.pdf`;
+        const fileUrl = makeSeedPdfDataUri(item.title, `${student.firstName} ${student.lastName}`);
+        await db.studentRecord.upsert({
+          where: {
+            studentId_periodType_periodLabel_recordType: {
+              studentId: student.id,
+              periodType: item.periodType,
+              periodLabel: item.periodLabel,
+              recordType: item.recordType,
+            },
+          },
+          update: {
+            title: item.title,
+            fileName,
+            fileUrl,
+            source: RecordSource.MANUAL,
+          },
+          create: {
+            institutionId: institution.id,
+            studentId: student.id,
+            title: item.title,
+            fileName,
+            fileUrl,
+            periodType: item.periodType,
+            periodLabel: item.periodLabel,
+            recordType: item.recordType,
+            source: RecordSource.MANUAL,
+            metadata: {
+              className: student.class?.name ?? null,
+              demo: true,
+            },
+          },
+        });
+      }
+    }
+    console.log(`✅ Demo placeholder records seeded for ${demoStudents.length} students`);
+  } else {
+    console.log("ℹ️ Demo placeholders skipped (set ENABLE_DEMO_PLACEHOLDERS=true to seed)");
+  }
 
   console.log("\n🎉 Seeding complete!\n");
   console.log("Demo credentials:");

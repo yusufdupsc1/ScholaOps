@@ -16,9 +16,18 @@ const envSchema = z.object({
   // App
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+  CRON_SECRET: z.string().optional(),
   ENABLE_AI_ASSIST: z
     .union([z.literal("true"), z.literal("false")])
     .default("false")
+    .transform((value) => value === "true"),
+  ENABLE_DEMO_PLACEHOLDERS: z
+    .union([z.literal("true"), z.literal("false")])
+    .default("false")
+    .transform((value) => value === "true"),
+  AUTO_DOCS_ENABLED: z
+    .union([z.literal("true"), z.literal("false")])
+    .default("true")
     .transform((value) => value === "true"),
   REALTIME_PROVIDER: z.enum(["sse", "polling"]).default("sse"),
   PUSH_VAPID_PUBLIC_KEY: z.string().optional(),
@@ -57,6 +66,14 @@ function createEnv(): Env {
     if (process.env.NODE_ENV === "production") {
       throw new Error("Invalid environment variables");
     }
+  }
+
+  if (
+    parsed.success &&
+    parsed.data.NODE_ENV === "production" &&
+    !parsed.data.CRON_SECRET
+  ) {
+    console.warn("⚠️ CRON_SECRET is not set; cron routes will reject requests.");
   }
 
   return parsed.data as Env;

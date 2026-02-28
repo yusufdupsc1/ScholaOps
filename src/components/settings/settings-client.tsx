@@ -22,6 +22,9 @@ type Institution = {
 type SettingsRow = {
     academicYear: string; termsPerYear: number; workingDays: number[];
     emailNotifs: boolean; smsNotifs: boolean; lateFeePercent: number; gracePeriodDays: number;
+    signatoryName: string | null; signatoryTitle: string | null;
+    coSignatoryName: string | null; coSignatoryTitle: string | null;
+    certificateFooter: string | null; certificateLogoUrl: string | null;
 } | null;
 
 interface Props { institution: Institution; settings: SettingsRow }
@@ -139,6 +142,12 @@ function AcademicTab({ settings }: { settings: SettingsRow }) {
         smsNotifs: settings?.smsNotifs ?? false,
         lateFeePercent: settings?.lateFeePercent ?? 0,
         gracePeriodDays: settings?.gracePeriodDays ?? 7,
+        signatoryName: settings?.signatoryName ?? "",
+        signatoryTitle: settings?.signatoryTitle ?? "",
+        coSignatoryName: settings?.coSignatoryName ?? "",
+        coSignatoryTitle: settings?.coSignatoryTitle ?? "",
+        certificateFooter: settings?.certificateFooter ?? "",
+        certificateLogoUrl: settings?.certificateLogoUrl ?? "",
     });
     const set = (k: keyof InstitutionSettingsData, v: unknown) => setForm(f => ({ ...f, [k]: v }));
 
@@ -224,6 +233,36 @@ function AcademicTab({ settings }: { settings: SettingsRow }) {
                             </button>
                         </div>
                     ))}
+                </div>
+            </div>
+
+            <div className="border-t border-border pt-5">
+                <h2 className="font-semibold mb-4">Certificate Signatures</h2>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="sig-name">Signatory Name</Label>
+                        <Input id="sig-name" value={form.signatoryName ?? ""} onChange={e => set("signatoryName", e.target.value)} placeholder="Md. Rahman" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="sig-title">Signatory Title</Label>
+                        <Input id="sig-title" value={form.signatoryTitle ?? ""} onChange={e => set("signatoryTitle", e.target.value)} placeholder="Principal" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="cosig-name">Co-signatory Name</Label>
+                        <Input id="cosig-name" value={form.coSignatoryName ?? ""} onChange={e => set("coSignatoryName", e.target.value)} placeholder="Ayesha Akter" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="cosig-title">Co-signatory Title</Label>
+                        <Input id="cosig-title" value={form.coSignatoryTitle ?? ""} onChange={e => set("coSignatoryTitle", e.target.value)} placeholder="Class Teacher" />
+                    </div>
+                </div>
+                <div className="space-y-1.5 mt-4">
+                    <Label htmlFor="cert-logo">Certificate Logo URL</Label>
+                    <Input id="cert-logo" value={form.certificateLogoUrl ?? ""} onChange={e => set("certificateLogoUrl", e.target.value)} placeholder="https://..." />
+                </div>
+                <div className="space-y-1.5 mt-4">
+                    <Label htmlFor="cert-footer">Certificate Footer Note</Label>
+                    <Input id="cert-footer" value={form.certificateFooter ?? ""} onChange={e => set("certificateFooter", e.target.value)} placeholder="Verified by scholaOps Academy" />
                 </div>
             </div>
 

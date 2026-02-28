@@ -11,6 +11,12 @@ paths:
       summary: List students
     post:
       summary: Create student
+  /students/reports/generate:
+    post:
+      summary: Generate ready-made student record PDF
+  /students/{id}/records:
+    get:
+      summary: List generated records for one student
   /teachers:
     get:
       summary: List teachers

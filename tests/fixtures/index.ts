@@ -34,18 +34,19 @@ export function createInstitutionFixture(
 ): Institution {
   return {
     id: faker.string.uuid(),
-    name: faker.company.name() + " Academy",
-    slug: faker.helpers.slugify(faker.company.name()).toLowerCase(),
-    email: faker.internet.email(),
-    phone: faker.phone.number(),
-    address: faker.location.streetAddress(),
-    city: faker.location.city(),
-    country: faker.location.country(),
-    timezone: "America/New_York",
-    currency: "USD",
+    name: "scholaops-demo Academy",
+    slug: "scholaops-demo",
+    email: "admin@school.edu",
+    phone: "+8801700000000",
+    address: "Dhaka, Bangladesh",
+    city: "Dhaka",
+    country: "BD",
+    timezone: "Asia/Dhaka",
+    currency: "BDT",
     logo: null,
     plan: "PROFESSIONAL" as Plan,
     planExpiry: faker.date.future({ years: 1 }),
+    isActive: true,
     createdAt: faker.date.past(),
     updatedAt: faker.date.recent(),
     ...overrides,
@@ -74,25 +75,33 @@ export function createUserFixture(overrides: Partial<User> = {}): User {
 export function createStudentFixture(
   overrides: Partial<Student> = {},
 ): Student {
+  const bdFirstNames = ["Ayaan", "Arisha", "Nabil", "Sadia", "Rafi", "Nafisa", "Tahmid", "Anika"];
+  const bdLastNames = ["Rahman", "Ahmed", "Hossain", "Islam", "Karim", "Khan", "Sarker", "Akter"];
+  const firstName = faker.helpers.arrayElement(bdFirstNames);
+  const lastName = faker.helpers.arrayElement(bdLastNames);
+
   return {
     id: faker.string.uuid(),
     studentId: `STU-${faker.date.year()}-${faker.string.numeric(4)}`,
-    firstName: faker.person.firstName(),
-    lastName: faker.person.lastName(),
+    firstName,
+    lastName,
     email: faker.internet.email({
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
-      domain: "student.school.com",
+      firstName,
+      lastName,
+      domain: "student.school.edu",
     }),
     gender: "MALE" as Gender,
     dateOfBirth: faker.date.birthdate({ min: 10, max: 18, mode: "age" }),
     phone: faker.phone.number(),
     address: faker.location.streetAddress(),
+    city: "Dhaka",
+    country: "Bangladesh",
+    enrollmentDate: faker.date.past(),
+    graduationDate: null,
     status: "ACTIVE" as StudentStatus,
+    bloodGroup: null,
     classId: faker.string.uuid(),
     institutionId: faker.string.uuid(),
-    photoUrl: null,
-    parentId: null,
     createdAt: faker.date.past(),
     updatedAt: faker.date.recent(),
     ...overrides,
@@ -103,14 +112,19 @@ export function createStudentFixture(
 export function createTeacherFixture(
   overrides: Partial<Teacher> = {},
 ): Teacher {
+  const bdFirstNames = ["Fahim", "Nusrat", "Rakib", "Sharmin", "Mahmud", "Tanjina"];
+  const bdLastNames = ["Hasan", "Jahan", "Hossain", "Akter", "Rahman", "Sultana"];
+  const firstName = faker.helpers.arrayElement(bdFirstNames);
+  const lastName = faker.helpers.arrayElement(bdLastNames);
+
   return {
     id: faker.string.uuid(),
     teacherId: `TCH-${faker.date.year()}-${faker.string.numeric(3)}`,
-    firstName: faker.person.firstName(),
-    lastName: faker.person.lastName(),
+    firstName,
+    lastName,
     email: faker.internet.email({
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
+      firstName,
+      lastName,
       domain: "school.com",
     }),
     gender: "MALE" as Gender,
@@ -121,16 +135,17 @@ export function createTeacherFixture(
     salary: faker.number.int({ min: 40000, max: 100000 }),
     specialization: faker.helpers.arrayElement([
       "Mathematics",
-      "Science",
+      "General Science",
       "English",
-      "History",
-      "Computer Science",
+      "Bangla",
+      "Bangladesh and Global Studies",
+      "Religion",
     ]),
-    qualifications: "B.Ed",
+    qualification: "B.Ed",
     joiningDate: faker.date.past({ years: 5 }),
     institutionId: faker.string.uuid(),
     userId: null,
-    photoUrl: null,
+    photo: null,
     createdAt: faker.date.past(),
     updatedAt: faker.date.recent(),
     ...overrides,
@@ -139,11 +154,21 @@ export function createTeacherFixture(
 
 // Class fixtures
 export function createClassFixture(overrides: Partial<Class> = {}): Class {
+  const classes = [
+    { name: "Pre-Primary", grade: "PP", section: "A" },
+    { name: "Class One", grade: "1", section: "A" },
+    { name: "Class Two", grade: "2", section: "A" },
+    { name: "Class Three", grade: "3", section: "A" },
+    { name: "Class Four", grade: "4", section: "A" },
+    { name: "Class Five", grade: "5", section: "A" },
+  ];
+  const selected = faker.helpers.arrayElement(classes);
+
   return {
     id: faker.string.uuid(),
-    name: `Grade ${faker.number.int({ min: 1, max: 12 })}${faker.helpers.arrayElement(["A", "B", "C"])}`,
-    grade: faker.number.int({ min: 1, max: 12 }).toString(),
-    section: faker.helpers.arrayElement(["A", "B", "C"]),
+    name: selected.name,
+    grade: selected.grade,
+    section: selected.section,
     capacity: faker.number.int({ min: 20, max: 40 }),
     roomNumber: `Room ${faker.number.int({ min: 101, max: 999 })}`,
     academicYear: `${faker.date.year()}-${faker.date.year() + 1}`,
@@ -160,20 +185,20 @@ export function createClassFixture(overrides: Partial<Class> = {}): Class {
 export function createSubjectFixture(
   overrides: Partial<Subject> = {},
 ): Subject {
+  const subjectMap = [
+    { name: "Bangla", code: "BAN" },
+    { name: "English", code: "ENG" },
+    { name: "Mathematics", code: "MTH" },
+    { name: "General Science", code: "GSC" },
+    { name: "Bangladesh and Global Studies", code: "BGS" },
+    { name: "Religion", code: "REL" },
+  ];
+  const subject = faker.helpers.arrayElement(subjectMap);
+
   return {
     id: faker.string.uuid(),
-    name: faker.helpers.arrayElement([
-      "Mathematics",
-      "English",
-      "Science",
-      "History",
-      "Computer Science",
-      "Art",
-      "Physical Education",
-    ]),
-    code:
-      faker.string.alpha({ length: 3, casing: "upper" }) +
-      faker.number.int({ min: 100, max: 999 }),
+    name: subject.name,
+    code: subject.code,
     description: faker.lorem.sentence(),
     credits: faker.number.int({ min: 1, max: 4 }),
     isCore: faker.datatype.boolean(),
@@ -246,8 +271,8 @@ export function createAttendanceFixture(
     studentId: faker.string.uuid(),
     classId: faker.string.uuid(),
     institutionId: faker.string.uuid(),
-    createdAt: faker.date.recent(),
-    updatedAt: faker.date.recent(),
+    remarks: null,
+    markedAt: faker.date.recent(),
     ...overrides,
   };
 }
@@ -355,7 +380,6 @@ export function createAuditLogFixture(
     ipAddress: faker.internet.ipv4(),
     userAgent: faker.internet.userAgent(),
     userId: faker.string.uuid(),
-    institutionId: faker.string.uuid(),
     createdAt: faker.date.recent(),
     ...overrides,
   };

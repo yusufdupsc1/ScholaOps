@@ -10,6 +10,8 @@ export async function GET() {
       docs: "/openapi/v1.yaml",
       endpoints: [
         "/api/v1/students",
+        "/api/v1/students/reports/generate",
+        "/api/v1/students/:id/records",
         "/api/v1/teachers",
         "/api/v1/classes",
         "/api/v1/attendance",

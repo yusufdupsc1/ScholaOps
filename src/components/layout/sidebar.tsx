@@ -17,6 +17,7 @@ import {
   LogOut,
   School,
   BookOpen,
+  FileText,
   ChevronRight,
   ShieldCheck,
   GraduationCap,
@@ -55,6 +56,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     label: "Academic",
     items: [
       { label: "Students", href: "/dashboard/students", icon: GraduationCap },
+      { label: "Student Reports", href: "/dashboard/students/reports", icon: FileText },
       { label: "Teachers", href: "/dashboard/teachers", icon: Users },
       { label: "Classes", href: "/dashboard/classes", icon: BookOpen },
       { label: "Attendance", href: "/dashboard/attendance", icon: ClipboardCheck },
